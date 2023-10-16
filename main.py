@@ -9,8 +9,8 @@ import sqlite3
 from telebot import types
 bot = telebot.TeleBot('6499881879:AAHslQDLXLNbNCM4zFhYMPEWiEHVibzgaA8')
 # ----------------------------------------------- #
-# MADE: made rows, made main message, made skip onboarding if user data exists, fix lions to zero error, added photo to main message
-# NEED: fix timeout=25, rewrite text, create /help, edit rules and more, PROBLEN WITH EDITING INFO
+# MADE:SOLVE WITH EDITING INFO!!
+# NEED: fix timeout=25, rewrite text, create /help, edit more rules and more
 
 def get_user_db(user_id):
     conn = sqlite3.connect(f'{user_id}.db')
@@ -169,7 +169,7 @@ def callback_handler(call):
             bot.send_photo(call.message.chat.id, file, reply_markup=markup)    
     elif call.data == 'button1':
         bot.send_message(user_id, "Okay, let's begin!\nWhat's your name?")
-        bot.register_next_step_handler(call.message, ask_quser_name)
+        bot.register_next_step_handler(call.message, edit_quser_name)
     elif call.data == 'button3':
         bot.send_message(call.message.chat.id, "How much?") #plus
         bot.register_next_step_handler(call.message, pluslions)
@@ -177,14 +177,11 @@ def callback_handler(call):
         bot.send_message(call.message.chat.id, "How much?") #minus
         bot.register_next_step_handler(call.message, minuslions)
     elif call.data == 'button5': #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        #user_id = message.from_user.id
-        bot.send_message(user_id, "And let's begin!\nWhat's your name?")
-        #bot.send_message(user_id, "Okay, let's begin!\nWhat's your name?")
-        bot.register_next_step_handler(call.message, ask_quser_name)
+        bot.send_message(user_id, "Okay, let's begin!\nWhat's your name?")
+        bot.register_next_step_handler(call.message, edit_quser_name)
     elif call.data == 'button6':
         bot.send_message(call.message.chat.id, "this is settings")
         bot.register_next_step_handler(call.message, more)
-
 
 def minuslions(message):
     user_id = message.from_user.id
@@ -248,17 +245,117 @@ def pluslions(message):
             bot.send_photo(user_id, file, reply_markup=markup)
     else:
         bot.send_message(user_id, "Error: User data not found. Please make sure you have provided your information.")
-    
-    
 def reversedlogin(message):
     #user_id = message.from_user.id
     bot.send_message(message, "Want to edit?")
-    
-    
-    
-        
-    
-    
 def more(message):
     user_id = message.from_user.id
+
+@bot.message_handler(commands=['start_edit_info'])
+def start_edit_info(message):
+    user_id = message.from_user.id
+    bot.send_message(user_id, "What's your name?")
+    bot.register_next_step_handler(message, edit_quser_name)
+def edit_quser_name(message):
+    user_id = message.from_user.id
+    quser_name = message.text.strip().lower()
+    conn, cursor = get_user_db(user_id)
+    cursor.execute("UPDATE userdata SET  quser_name = ? WHERE id = (SELECT MAX(id) FROM userdata)", (quser_name,))
+    conn.commit()
+    conn.close()
+    bot.send_message(user_id, "Great! What's your soulmate's name?")
+    bot.register_next_step_handler(message, edit_soulmate_name)
+def edit_soulmate_name(message):
+    user_id = message.from_user.id
+    soulmate_name = message.text.strip().lower()
+
+    conn, cursor = get_user_db(user_id)
+    cursor.execute("UPDATE userdata SET soulmate_name = ? WHERE id = (SELECT MAX(id) FROM userdata)", (soulmate_name,))
+    conn.commit()
+    conn.close()
+
+    bot.send_message(user_id, "Now give me your task:")
+    bot.register_next_step_handler(message, edit_user_task)
+
+def edit_user_task(message):
+    user_id = message.from_user.id
+    user_task = message.text.strip().lower()
+
+    conn, cursor = get_user_db(user_id)
+    cursor.execute("UPDATE userdata SET  user_task = ? WHERE id = (SELECT MAX(id) FROM userdata)", (user_task,))
+    conn.commit()
+    conn.close()
+
+    bot.send_message(user_id, "What's the cost of the task?")
+    bot.register_next_step_handler(message, edit_task_cost)
+
+def edit_task_cost(message):
+    user_id = message.from_user.id
+    task_cost = message.text.strip().lower()
+
+    conn, cursor = get_user_db(user_id)
+    cursor.execute("UPDATE userdata SET  task_cost = ? WHERE id = (SELECT MAX(id) FROM userdata)", (task_cost,))
+    conn.commit()
+    conn.close()
+
+    bot.send_message(user_id, "How will you reward?")
+    bot.register_next_step_handler(message, edit_reward)
+
+def edit_reward(message):
+    user_id = message.from_user.id
+    user_reward = message.text.strip().lower()
+
+    conn, cursor = get_user_db(user_id)
+    cursor.execute("UPDATE userdata SET  user_reward = ? WHERE id = (SELECT MAX(id) FROM userdata)", (user_reward,))
+    conn.commit()
+    conn.close()
+
+    bot.send_message(user_id, "How much will it cost?")
+    bot.register_next_step_handler(message, edit_reward_cost)
+
+def edit_reward_cost(message):
+    user_id = message.from_user.id
+    reward_cost = message.text.strip().lower()
+
+    conn, cursor = get_user_db(user_id)
+    cursor.execute("UPDATE userdata SET  reward_cost = ? WHERE id = (SELECT MAX(id) FROM userdata)", (reward_cost,))
+    conn.commit()
+    conn.close()
+
+    bot.send_message(user_id, "Thanks for sharing your information! Here's what I know about you:")
+    send_user_data_edited(message)
+
+def send_user_data_edited(message):
+    user_id = message.from_user.id
+    conn, cursor = get_user_db(user_id)
+    cursor.execute("SELECT quser_name, soulmate_name, user_task, task_cost, user_reward, reward_cost, l_balance FROM userdata WHERE id = (SELECT MAX(id) FROM userdata)")
+    user_data = cursor.fetchone()
+    conn.close()
+    if user_data:
+        quser_name, soulmate_name, user_task, task_cost, user_reward, reward_cost, l_balance = user_data
+        response = f"Your name: {quser_name}\nYour soulmate name: {soulmate_name}\nYour task is: {user_task} - for {task_cost} lions\nYour reward is: {user_reward} - for {reward_cost} lions\nLions balance: {l_balance}"
+    else:
+        response = "I don't have your data yet. Please provide your information."
+    bot.send_message(user_id, response)
+    markup = telebot.types.InlineKeyboardMarkup()
+    button1 = telebot.types.InlineKeyboardButton("yes", callback_data='button1')
+    button2 = telebot.types.InlineKeyboardButton("no", callback_data='button2')
+    markup.add(button1, button2)
+    bot.send_message(user_id, "Want to edit?", reply_markup=markup)
+    
+
+@bot.message_handler(commands=['wtf'])
+def wtf(message):
+    user_id = message.from_user.id
+    conn, cursor = get_user_db(user_id)
+    cursor.execute("SELECT quser_name, soulmate_name, user_task, task_cost, user_reward, reward_cost, l_balance FROM userdata WHERE id = (SELECT MAX(id) FROM userdata)")
+    user_data = cursor.fetchone()
+    conn.close()
+    if user_data:
+        quser_name, soulmate_name, user_task, task_cost, user_reward, reward_cost, l_balance = user_data
+        response = f"Your name: {quser_name}\nYour soulmate name: {soulmate_name}\nYour task is: {user_task} - for {task_cost} lions\nYour reward is: {user_reward} - for {reward_cost} lions\nLions balance: {l_balance}"
+    else:
+        response = "I don't have your data yet. Please provide your information."
+    bot.send_message(user_id, response)
+        
 bot.polling(non_stop=True)
