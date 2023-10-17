@@ -9,8 +9,8 @@ import sqlite3
 from telebot import types
 bot = telebot.TeleBot('6499881879:AAHslQDLXLNbNCM4zFhYMPEWiEHVibzgaA8')
 # ----------------------------------------------- #
-# MADE:SOLVE WITH EDITING INFO!!
-# NEED: fix timeout=25, rewrite text, create /help, edit more rules and more
+# MADE: made donation, contact and return func. create /help
+# NEED: fix timeout=25 (around 11-12 min), rewrite text, edit more rules and more
 
 def get_user_db(user_id):
     conn = sqlite3.connect(f'{user_id}.db')
@@ -36,16 +36,19 @@ def greet_user(message):
         user_data = cursor.fetchone()
         conn.close()
         if user_data:
-            quser_name, soulmate_name, user_task, task_cost, user_reward, reward_cost, l_balance = user_data
-            response = f"Your name: {quser_name}\nYour soulmate name: {soulmate_name}\nYour task is: {user_task} - for {task_cost} lions\nYour reward is: {user_reward} - for {reward_cost} liond\nlions balance: {l_balance}"
+            quser_name, soulmate_name, user_task, task_cost, user_reward, reward_cost, l_balance = user_data  
+            response = f"welcome back, {quser_name}💖{soulmate_name}\ntasks:\n1. {user_task} - {task_cost} lions\nrewards:\n1. {user_reward} - {reward_cost} lions\n🦁: {l_balance}"
         else:
             response = "I don't have your data yet. Please provide your information."
+        photo = 'lions2.jpeg'
+        file = open('./' + photo, 'rb')
+        bot.send_photo(user_id, file)  
         bot.send_message(user_id, response)
         markup = telebot.types.InlineKeyboardMarkup()
         button1 = telebot.types.InlineKeyboardButton("yes", callback_data='button1')
         button2 = telebot.types.InlineKeyboardButton("no", callback_data='button2')
         markup.add(button1, button2)
-        bot.send_message(user_id, "Want to edit?", reply_markup=markup)
+        bot.send_message(user_id, "want to edit?", reply_markup=markup)
     except Exception:
         user_id = message.from_user.id
         create_user_table(user_id)
@@ -146,6 +149,12 @@ def send_user_data(message):
     markup.add(button1, button2)
     bot.send_message(user_id, "Want to edit?", reply_markup=markup)
 
+# ----------------------------------------------- #
+#                   callback                      #
+#                                                 #
+#                                                 #
+#                                                 #
+# ----------------------------------------------- #
 
 @bot.callback_query_handler(func=lambda call: True) # main message
 def callback_handler(call):
@@ -165,9 +174,12 @@ def callback_handler(call):
             markup.row(button5, button6)
             photo = 'lions.png'
             file = open('./' + photo, 'rb')
-            bot.send_message(call.message.chat.id, f"Hello, {quser_name}!\nlions balance: {l_balance}")#, reply_markup=markup)
+            bot.send_message(call.message.chat.id, f"Hello, {quser_name}!\n🦁: {l_balance}")#, reply_markup=markup)
             bot.send_photo(call.message.chat.id, file, reply_markup=markup)    
-    elif call.data == 'button1':
+    elif call.data == 'button5': #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        bot.send_message(user_id, "Okay, let's begin!\nWhat's your name?")
+        bot.register_next_step_handler(call.message, edit_quser_name)
+    elif call.data == 'button1': #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         bot.send_message(user_id, "Okay, let's begin!\nWhat's your name?")
         bot.register_next_step_handler(call.message, edit_quser_name)
     elif call.data == 'button3':
@@ -176,12 +188,52 @@ def callback_handler(call):
     elif call.data == 'button4':
         bot.send_message(call.message.chat.id, "How much?") #minus
         bot.register_next_step_handler(call.message, minuslions)
-    elif call.data == 'button5': #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        bot.send_message(user_id, "Okay, let's begin!\nWhat's your name?")
-        bot.register_next_step_handler(call.message, edit_quser_name)
     elif call.data == 'button6':
-        bot.send_message(call.message.chat.id, "this is settings")
-        bot.register_next_step_handler(call.message, more)
+        markup = types.InlineKeyboardMarkup()
+        return_button = types.InlineKeyboardButton("Return", callback_data='button7')
+        markup.add(return_button)
+        bot.send_message(call.message.chat.id, "you can:")
+        bot.send_message(call.message.chat.id, "✨[say thank you](https://www.buymeacoffee.com/)✨", parse_mode="Markdown")
+        bot.send_message(call.message.chat.id, "✨[contact me](https://t.me/levaau)✨", parse_mode="Markdown", reply_markup=markup)
+    elif call.data == 'button7':
+        user_id = call.from_user.id
+        conn, cursor = get_user_db(user_id)
+        cursor.execute("SELECT quser_name, l_balance FROM userdata WHERE id = (SELECT MAX(id) FROM userdata)")
+        user_data = cursor.fetchone()
+        quser_name, l_balance = user_data
+        markup = telebot.types.InlineKeyboardMarkup()
+        button3 = telebot.types.InlineKeyboardButton("add", callback_data='button3')
+        button4 = telebot.types.InlineKeyboardButton("remove", callback_data='button4')
+        markup.row(button3, button4)
+        button5 = telebot.types.InlineKeyboardButton("edit rules", callback_data='button5')
+        button6 = telebot.types.InlineKeyboardButton("more", callback_data='button6')
+        markup.row(button5, button6)
+        photo = 'lions.png'
+        file = open('./' + photo, 'rb')
+        bot.send_message(call.message.chat.id, f"Hello, {quser_name}!\n🦁: {l_balance}")#, reply_markup=markup)
+        bot.send_photo(call.message.chat.id, file, reply_markup=markup)
+    elif call.data == 'button8':
+        user_id = call.from_user.id
+        conn, cursor = get_user_db(user_id)
+        cursor.execute("SELECT quser_name, l_balance FROM userdata WHERE id = (SELECT MAX(id) FROM userdata)")
+        user_data = cursor.fetchone()
+        quser_name, l_balance = user_data
+        markup = telebot.types.InlineKeyboardMarkup()
+        button3 = telebot.types.InlineKeyboardButton("add", callback_data='button3')
+        button4 = telebot.types.InlineKeyboardButton("remove", callback_data='button4')
+        markup.row(button3, button4)
+        button5 = telebot.types.InlineKeyboardButton("edit rules", callback_data='button5')
+        button6 = telebot.types.InlineKeyboardButton("more", callback_data='button6')
+        markup.row(button5, button6)
+        photo = 'lions.png'
+        file = open('./' + photo, 'rb')
+        bot.send_message(call.message.chat.id, f"Hello, {quser_name}!\n🦁: {l_balance}")#, reply_markup=markup)
+        bot.send_photo(call.message.chat.id, file, reply_markup=markup)
+    elif call.data == 'button9':
+        markup = types.InlineKeyboardMarkup()
+        return_button = types.InlineKeyboardButton("Return", callback_data='button7')
+        markup.add(return_button)
+        bot.send_message(call.message.chat.id, "✨[feel free to contact me](https://t.me/levaau)✨", parse_mode="Markdown", reply_markup=markup)
 
 def minuslions(message):
     user_id = message.from_user.id
@@ -209,12 +261,10 @@ def minuslions(message):
             markup.row(button5, button6)
             photo = 'lions.png'
             file = open('./' + photo, 'rb')
-            bot.send_message(user_id, f"Hello, {quser_name}!\nlions balance: {l_balance}")#, reply_markup=markup)
+            bot.send_message(user_id, f"Hello, {quser_name}!\n🦁: {l_balance}")#, reply_markup=markup)
             bot.send_photo(user_id, file, reply_markup=markup)
     else:
         bot.send_message(user_id, "Error: User data not found. Please make sure you have provided your information.")
-
-
 def pluslions(message):
     user_id = message.from_user.id
     conn, cursor = get_user_db(user_id)
@@ -241,15 +291,17 @@ def pluslions(message):
             markup.row(button5, button6)
             photo = 'lions.png'
             file = open('./' + photo, 'rb')
-            bot.send_message(user_id, f"Hello, {quser_name}!\nlions balance: {l_balance}")#, reply_markup=markup)
+            bot.send_message(user_id, f"Hello, {quser_name}!\n🦁: {l_balance}")#, reply_markup=markup)
             bot.send_photo(user_id, file, reply_markup=markup)
     else:
         bot.send_message(user_id, "Error: User data not found. Please make sure you have provided your information.")
-def reversedlogin(message):
-    #user_id = message.from_user.id
-    bot.send_message(message, "Want to edit?")
-def more(message):
-    user_id = message.from_user.id
+
+# ----------------------------------------------- #
+#                   editinfo                      #
+#                                                 #
+#                                                 #
+#                                                 #
+# ----------------------------------------------- #
 
 @bot.message_handler(commands=['start_edit_info'])
 def start_edit_info(message):
@@ -276,7 +328,6 @@ def edit_soulmate_name(message):
 
     bot.send_message(user_id, "Now give me your task:")
     bot.register_next_step_handler(message, edit_user_task)
-
 def edit_user_task(message):
     user_id = message.from_user.id
     user_task = message.text.strip().lower()
@@ -288,7 +339,6 @@ def edit_user_task(message):
 
     bot.send_message(user_id, "What's the cost of the task?")
     bot.register_next_step_handler(message, edit_task_cost)
-
 def edit_task_cost(message):
     user_id = message.from_user.id
     task_cost = message.text.strip().lower()
@@ -300,7 +350,6 @@ def edit_task_cost(message):
 
     bot.send_message(user_id, "How will you reward?")
     bot.register_next_step_handler(message, edit_reward)
-
 def edit_reward(message):
     user_id = message.from_user.id
     user_reward = message.text.strip().lower()
@@ -312,7 +361,6 @@ def edit_reward(message):
 
     bot.send_message(user_id, "How much will it cost?")
     bot.register_next_step_handler(message, edit_reward_cost)
-
 def edit_reward_cost(message):
     user_id = message.from_user.id
     reward_cost = message.text.strip().lower()
@@ -324,7 +372,6 @@ def edit_reward_cost(message):
 
     bot.send_message(user_id, "Thanks for sharing your information! Here's what I know about you:")
     send_user_data_edited(message)
-
 def send_user_data_edited(message):
     user_id = message.from_user.id
     conn, cursor = get_user_db(user_id)
@@ -342,20 +389,39 @@ def send_user_data_edited(message):
     button2 = telebot.types.InlineKeyboardButton("no", callback_data='button2')
     markup.add(button1, button2)
     bot.send_message(user_id, "Want to edit?", reply_markup=markup)
-    
 
-@bot.message_handler(commands=['wtf'])
-def wtf(message):
+@bot.message_handler(commands=['help'])
+def help(message):
+    user_id = message.from_user.id
+    bot.send_message(user_id, "Hello, I'm here to help your have fun! It's lions app!\nA small tutorial for you:")
+    video = 'help.mp4'
+    file = open('./' + video, 'rb')
+    bot.send_video(message.chat.id, file)
+    markup = telebot.types.InlineKeyboardMarkup()
+    button1 = telebot.types.InlineKeyboardButton("yes", callback_data='button9')
+    button2 = telebot.types.InlineKeyboardButton("no", callback_data='button8')
+    markup.add(button1, button2)
+    bot.send_message(user_id, "still confusing?", reply_markup=markup)
+
+@bot.message_handler(commands=['profile'])
+def profile(message):
     user_id = message.from_user.id
     conn, cursor = get_user_db(user_id)
     cursor.execute("SELECT quser_name, soulmate_name, user_task, task_cost, user_reward, reward_cost, l_balance FROM userdata WHERE id = (SELECT MAX(id) FROM userdata)")
     user_data = cursor.fetchone()
     conn.close()
     if user_data:
-        quser_name, soulmate_name, user_task, task_cost, user_reward, reward_cost, l_balance = user_data
-        response = f"Your name: {quser_name}\nYour soulmate name: {soulmate_name}\nYour task is: {user_task} - for {task_cost} lions\nYour reward is: {user_reward} - for {reward_cost} lions\nLions balance: {l_balance}"
+        quser_name, soulmate_name, user_task, task_cost, user_reward, reward_cost, l_balance = user_data  
+        response = f"welcome back, {quser_name}💖{soulmate_name}\ntasks:\n1. {user_task} - {task_cost} lions\nrewards:\n1. {user_reward} - {reward_cost} lions\n🦁: {l_balance}"
     else:
         response = "I don't have your data yet. Please provide your information."
+    photo = 'lions2.jpeg'
+    file = open('./' + photo, 'rb')
+    bot.send_photo(user_id, file)  
     bot.send_message(user_id, response)
-        
+    markup = telebot.types.InlineKeyboardMarkup()
+    button1 = telebot.types.InlineKeyboardButton("yes", callback_data='button1')
+    button2 = telebot.types.InlineKeyboardButton("no", callback_data='button2')
+    markup.add(button1, button2)
+    bot.send_message(user_id, "want to edit?", reply_markup=markup)
 bot.polling(non_stop=True)
