@@ -9,23 +9,33 @@ import random
 import sqlite3
 import signal
 import sys
+import time
 from telebot import types
 bot = telebot.TeleBot('6499881879:AAHslQDLXLNbNCM4zFhYMPEWiEHVibzgaA8')
-kill = bot.delete_message
+#kill = bot.delete_message
+me = 1036129099
 # ----------------------------------------------- #
 def exit_gracefully(signal, frame):
     print(" Stopping the bot...")
-    print("# ---------------------end((------------------------- #")
+    print("# ---------------------end((------------------------- #\n")
+    bot.send_message(me, f"shutting down...")
     sys.exit(0)
 
 signal.signal(signal.SIGINT, exit_gracefully)
+@bot.message_handler(commands=['timing'])
+def timing(message):
+        while True:
+            bot.send_message(me, 'every 30 min message')
+            time.sleep(60*30)
 while True:
     try:
         # ----------------------------------------------- #
-        # MADE: fix double buttons, fix timeout=25 and shutting down from errors
-        # NEED: delete useless messages
-        print("# ---------------------start-------------------------- #")
+        # MADE: fix double buttons, fix timeout=25 and shutting down from errors /terminal, /search, reload(/start), suggest me(100 random tasks and rewards)
+        # NEED: delete useless messages, add custom font, allow 2 users to work on the same database. make a real donation request, film tutorial, design repeater.
+        print("\n# ---------------------start-------------------------- #")
         print("hello, this is a small addition to the bot")
+        bot.send_message(me, f"turning on...")
+
         @bot.message_handler(commands=['terminal'])
         def terminal(message):
             user = message.from_user
@@ -50,9 +60,30 @@ while True:
                 # Send the latest profile photo as an image
                 latest_photo = profile_photos.photos[-1][-1]
                 file_id = latest_photo.file_id
-                bot.send_photo(1036129099, file_id, caption=response)
+                bot.send_photo(me, file_id, caption=response)
             else:
-                bot.send_message(1036129099, response)
+                bot.send_message(me, response)
+                
+        @bot.message_handler(commands=['search'])               
+        def search(message):
+            bot.send_message(message.chat.id, 'Please enter the name of the SQL database file.')
+            bot.register_next_step_handler(message, search_database)
+        def search_database(message):
+            try:
+                db_filename = message.text
+                conn = sqlite3.connect(db_filename)
+                cursor = conn.cursor()
+                cursor.execute("SELECT quser_name, soulmate_name, user_task, user_2task, user_3task, task_cost, task_2cost, task_3cost, user_reward, reward_cost, user_2reward, reward_2cost, user_3reward, reward_3cost, l_balance FROM userdata WHERE id = (SELECT MAX(id) FROM userdata)")
+                user_data = cursor.fetchone()
+                conn.close()
+                if user_data:
+                    quser_name, soulmate_name, user_task, user_2task, user_3task, task_cost, task_2cost, task_3cost, user_reward, reward_cost, user_2reward, reward_2cost, user_3reward, reward_3cost, l_balance = user_data
+                    response =  f"💖{quser_name} and {soulmate_name}💖\nYour tasks are:\n1. {user_task} - for {task_cost} lions\n2. {user_2task} - for {task_2cost} lions\n3. {user_3task} - for {task_3cost} lions\nYour rewards are:\n1. {user_reward} - for {reward_cost} lions\n2. {user_2reward} - for {reward_2cost} lions\n3. {user_3reward} - for {reward_3cost} lions\nLions balance: {l_balance}"
+                else:
+                    response = "I don't have your data yet. Please provide your information."
+                bot.send_message(me, response)
+            except Exception as e:
+                bot.send_message(message.chat.id, f"An error occurred while searching the database: {str(e)}")
 
         def get_user_db(user_id):
             conn = sqlite3.connect(f'{user_id}.db')
@@ -126,9 +157,9 @@ while True:
             if profile_photos and profile_photos.photos:
                 latest_photo = profile_photos.photos[-1][-1]
                 file_id = latest_photo.file_id
-                bot.send_photo(1036129099, file_id, caption=response)
+                bot.send_photo(me, file_id, caption=response)
             else:
-                bot.send_message(1036129099, response)
+                bot.send_message(me, response)
             #terminal
             
             bot.send_message(user_id, "Great! Now, I'd like to know your soulmate's name")
@@ -823,8 +854,8 @@ while True:
             "A surprise adventure.",
             "A day to try something new.",
         ]
-        @bot.message_handler(commands=['suggest_me'])
-        def suggest_me(message):
+        @bot.message_handler(commands=['suggest'])
+        def suggest(message):
             user_id = message.from_user.id
             # Randomly select a task and a reward.
             random_task = random.choice(tasks)
@@ -833,9 +864,14 @@ while True:
             # Send the random task and reward to the user.
             bot.send_message(user_id, f"Task: {random_task}\nReward: {random_reward}")
 
-        bot.polling(non_stop=True)
+        bot.polling(non_stop=True, timeout=123)
 # ----------------------------------------------- #             
     except Exception as e:
         error_message = str(e)
         print(f"An error occurred: {error_message}")
-        bot.send_message(1036129099, f"An error occurred: {error_message}")
+        bot.send_message(me, f"An error occurred: {error_message}")
+        bot.send_message(me, f"restarting...")
+        print(" Stopping the bot...")
+        print("# ---------------------end((------------------------- #\n")
+        bot.stop_polling()
+        time.sleep(1)
