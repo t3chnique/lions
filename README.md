@@ -34,6 +34,6 @@ We welcome contributions from the community. If you have ideas for improvements,
 
 ## License
 
-This project is licensed under the [Apache License, Version 2.0](LICENSE.md), which was released in January 2004.
+This project is licensed under the [Apache License, Version 2.0](LICENSE), which was released in January 2004.
 
 Show your love and appreciation like never before with Love & Lions! 🦁❤️
