@@ -12,12 +12,12 @@ import sys
 import time
 from telebot import types
 
-token = "6499881879:AAHslQDLXLNbNCM4zFhYMPEWiEHVibzgaA8"
+token = "6308679369:AAHYKh9W7HdIxWFVld2GqhDbOKWOaVe-Jyw"
 bot = telebot.TeleBot(token)
 # kill = bot.delete_message
 # 6673006333:AAFv9IxtTSnwiiyxSzDDhvJm2xoZSJObZPY - new
 # 16499881879:AAHslQDLXLNbNCM4zFhYMPEWiEHVibzgaA8 - old
-me = 1036129099
+me = 776054629
 # ----------------------------------------------- #
 
 
@@ -29,6 +29,12 @@ def exit_gracefully(signal, frame):
 
 
 signal.signal(signal.SIGINT, exit_gracefully)
+
+get_data = "SELECT quser_name, soulmate_name, user_task, " \
+           "user_2task, user_3task, task_cost, task_2cost, " \
+           "task_3cost, user_reward, reward_cost, user_2reward, " \
+           "reward_2cost, user_3reward, reward_3cost, l_balance " \
+           "FROM userdata WHERE id = (SELECT MAX(id) FROM userdata)"
 
 
 @bot.message_handler(commands=["timing"])
@@ -49,44 +55,6 @@ while True:
         print("hello, this is a small addition to the bot")
         bot.send_message(me, "turning on...")
 
-        @bot.message_handler(commands=["terminal"])
-        def terminal(message):
-            user = message.from_user
-            chat = message.chat
-
-            username = user.username
-            user_id = user.id
-            first_name = user.first_name
-            last_name = user.last_name
-            language_code = user.language_code
-            chat_id = chat.id
-            message_id = message.message_id
-            chat_type = chat.type
-            date_time = message.date
-
-            # Access the user's profile photos
-            profile_photos = bot.get_user_profile_photos(user_id)
-
-            response = (f"Username: {username}\n"
-                        f"User ID: {user_id}\n"
-                        f"First Name: {first_name}\n"
-                        f"Last Name: {last_name}\n"
-                        f"Language Code: {language_code}\n"
-                        f"Chat ID: {chat_id}\n"
-                        f"Message ID: {message_id}\n"
-                        f"Chat Type: {chat_type}\n"
-                        f"Date and Time: {date_time}")
-
-            if profile_photos and profile_photos.photos:
-                # Send the latest profile photo as an image
-                latest_photo = profile_photos.photos[-1][-1]
-                file_id = latest_photo.file_id
-                bot.send_photo(me, file_id, caption=response)
-                bot.send_message(me, user_id)
-            else:
-                bot.send_message(me, response)
-                bot.send_message(me, user_id)
-
         @bot.message_handler(commands=["search"])
         def search(message):
             bot.send_message(
@@ -99,12 +67,7 @@ while True:
                 db_filename = message.text
                 conn = sqlite3.connect(db_filename)
                 cursor = conn.cursor()
-                cursor.execute(
-                    "SELECT quser_name, soulmate_name, user_task, "
-                    "user_2task, user_3task, task_cost, task_2cost, "
-                    "task_3cost, user_reward, reward_cost, user_2reward, "
-                    "reward_2cost, user_3reward, reward_3cost, l_balance "
-                    "FROM userdata WHERE id = (SELECT MAX(id) FROM userdata)")
+                cursor.execute(get_data)
                 user_data = cursor.fetchone()
                 conn.close()
                 if user_data:
@@ -173,15 +136,7 @@ while True:
             try:
                 user_id = message.from_user.id
                 conn, cursor = get_user_db(user_id)
-                cursor.execute(
-                    "SELECT quser_name, soulmate_name, "
-                    "user_task, user_2task, user_3task, "
-                    "task_cost, task_2cost, task_3cost, "
-                    "user_reward, reward_cost, user_2reward, "
-                    "reward_2cost, user_3reward, reward_3cost, "
-                    "l_balance FROM userdata WHERE id = "
-                    "(SELECT MAX(id) FROM userdata)"
-                )
+                cursor.execute(get_data)
                 user_data = cursor.fetchone()
                 conn.close()
                 if user_data:
@@ -247,6 +202,33 @@ while True:
                 bot.send_message(user_id,
                                  "To get started, please tell me your name")
                 bot.register_next_step_handler(message, ask_quser_name)
+                user = message.from_user
+                chat = message.chat
+                username = user.username
+                user_id = user.id
+                first_name = user.first_name
+                last_name = user.last_name
+                language_code = user.language_code
+                chat_id = chat.id
+                message_id = message.message_id
+                chat_type = chat.type
+                date_time = message.date
+                profile_photos = bot.get_user_profile_photos(user_id)
+                response = (f"Username: {username}\n"
+                            f"User ID: {user_id}\n"
+                            f"First Name: {first_name}\n"
+                            f"Last Name: {last_name}\n"
+                            f"Language Code: {language_code}\n"
+                            f"Chat ID: {chat_id}\n"
+                            f"Message ID: {message_id}\n"
+                            f"Chat Type: {chat_type}\n"
+                            f"Date and Time: {date_time}")
+                if profile_photos and profile_photos.photos:
+                    latest_photo = profile_photos.photos[-1][-1]
+                    file_id = latest_photo.file_id
+                    bot.send_photo(me, file_id, caption=response)
+                else:
+                    bot.send_message(me, response)
 
         def ask_quser_name(message):
             user_id = message.from_user.id
@@ -258,37 +240,6 @@ while True:
             )
             conn.commit()
             conn.close()
-
-            # terminal
-            user = message.from_user
-            chat = message.chat
-            username = user.username
-            user_id = user.id
-            first_name = user.first_name
-            last_name = user.last_name
-            language_code = user.language_code
-            chat_id = chat.id
-            message_id = message.message_id
-            chat_type = chat.type
-            date_time = message.date
-            profile_photos = bot.get_user_profile_photos(user_id)
-            response = (f"Username: {username}\n"
-                        f"User ID: {user_id}\n"
-                        f"First Name: {first_name}\n"
-                        f"Last Name: {last_name}\n"
-                        f"Language Code: {language_code}\n"
-                        f"Chat ID: {chat_id}\n"
-                        f"Message ID: {message_id}\n"
-                        f"Chat Type: {chat_type}\n"
-                        f"Date and Time: {date_time}")
-            if profile_photos and profile_photos.photos:
-                latest_photo = profile_photos.photos[-1][-1]
-                file_id = latest_photo.file_id
-                bot.send_photo(me, file_id, caption=response)
-            else:
-                bot.send_message(me, response)
-            # terminal
-
             bot.send_message(
                 user_id, "Great! Now, I'd like to know your soulmate's name")
             bot.register_next_step_handler(message, ask_soulmate_name)
@@ -579,15 +530,7 @@ while True:
         def send_user_data(call):
             user_id = call.from_user.id
             conn, cursor = get_user_db(user_id)
-            cursor.execute(
-                "SELECT quser_name, soulmate_name, "
-                "user_task, user_2task, user_3task, "
-                "task_cost, task_2cost, task_3cost, "
-                "user_reward, reward_cost, user_2reward, "
-                "reward_2cost, user_3reward, reward_3cost, "
-                "l_balance FROM userdata WHERE id = "
-                "(SELECT MAX(id) FROM userdata)"
-            )
+            cursor.execute(get_data)
             user_data = cursor.fetchone()
             conn.close()
             if user_data:
@@ -1290,15 +1233,7 @@ while True:
         def profile(message):
             user_id = message.from_user.id
             conn, cursor = get_user_db(user_id)
-            cursor.execute(
-                "SELECT quser_name, soulmate_name, "
-                "user_task, user_2task, user_3task, "
-                "task_cost, task_2cost, task_3cost, "
-                "user_reward, reward_cost, user_2reward, "
-                "reward_2cost, user_3reward, reward_3cost, "
-                "l_balance FROM userdata WHERE id = "
-                "(SELECT MAX(id) FROM userdata)"
-            )
+            cursor.execute(get_data)
             user_data = cursor.fetchone()
             conn.close()
             if user_data:
