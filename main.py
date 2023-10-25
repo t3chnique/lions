@@ -10,14 +10,17 @@ import sqlite3
 import signal
 import sys
 import time
+import os
 from telebot import types
+from dotenv import load_dotenv
+load_dotenv()
+token = os.getenv('TOKEN')
+me = os.getenv('ME')
 
-token = "6308679369:AAHYKh9W7HdIxWFVld2GqhDbOKWOaVe-Jyw"
 bot = telebot.TeleBot(token)
 # kill = bot.delete_message
 # 6673006333:AAFv9IxtTSnwiiyxSzDDhvJm2xoZSJObZPY - new
 # 16499881879:AAHslQDLXLNbNCM4zFhYMPEWiEHVibzgaA8 - old
-me = 776054629
 # ----------------------------------------------- #
 
 
@@ -47,10 +50,11 @@ def timing(message):
 while True:
     try:
         # ----------------------------------------------- #
-        # MADE: film tutorial
+        # MADE: fix terminal,
         # NEED: delete useless messages, add custom font, allow 2
         # users to work on the same database. make a real donation request,
-        # design repeater, make suggest button in registration and editting.
+        # design repeater, make suggest button in registration and editting
+        # X-step tutorial with buttons
         print("\n# ---------------------start-------------------------- #")
         print("hello, this is a small addition to the bot")
         bot.send_message(me, "turning on...")
@@ -68,6 +72,7 @@ while True:
                 conn = sqlite3.connect(db_filename)
                 cursor = conn.cursor()
                 cursor.execute(get_data)
+
                 user_data = cursor.fetchone()
                 conn.close()
                 if user_data:
@@ -136,7 +141,15 @@ while True:
             try:
                 user_id = message.from_user.id
                 conn, cursor = get_user_db(user_id)
-                cursor.execute(get_data)
+                cursor.execute(
+                    "SELECT quser_name, soulmate_name, "
+                    "user_task, user_2task, user_3task, "
+                    "task_cost, task_2cost, task_3cost, "
+                    "user_reward, reward_cost, user_2reward, "
+                    "reward_2cost, user_3reward, reward_3cost, "
+                    "l_balance FROM userdata WHERE id = "
+                    "(SELECT MAX(id) FROM userdata)"
+                )
                 user_data = cursor.fetchone()
                 conn.close()
                 if user_data:
@@ -198,10 +211,7 @@ while True:
                 )
                 video = "help.mp4"
                 file = open("./" + video, "rb")
-                bot.send_video(message.chat.id, file)
-                bot.send_message(user_id,
-                                 "To get started, please tell me your name")
-                bot.register_next_step_handler(message, ask_quser_name)
+                # terminal
                 user = message.from_user
                 chat = message.chat
                 username = user.username
@@ -229,6 +239,11 @@ while True:
                     bot.send_photo(me, file_id, caption=response)
                 else:
                     bot.send_message(me, response)
+                # terminal
+                bot.send_video(message.chat.id, file)
+                bot.send_message(user_id,
+                                 "To get started, please tell me your name")
+                bot.register_next_step_handler(message, ask_quser_name)
 
         def ask_quser_name(message):
             user_id = message.from_user.id
@@ -240,6 +255,7 @@ while True:
             )
             conn.commit()
             conn.close()
+
             bot.send_message(
                 user_id, "Great! Now, I'd like to know your soulmate's name")
             bot.register_next_step_handler(message, ask_soulmate_name)
@@ -577,32 +593,6 @@ while True:
             bot.send_message(user_id, "Want to edit?", reply_markup=markup)
 
         @bot.message_handler(commands=["main"])
-        def main(call):
-            user_id = call.from_user.id
-            conn, cursor = get_user_db(user_id)
-            cursor.execute(
-                "SELECT quser_name, l_balance FROM "
-                "userdata WHERE id = (SELECT MAX(id) FROM userdata)"
-            )
-            user_data = cursor.fetchone()
-            quser_name, l_balance = user_data
-            markup = telebot.types.InlineKeyboardMarkup()
-            button3 = telebot.types.InlineKeyboardButton(
-                "add", callback_data="button3")
-            button4 = telebot.types.InlineKeyboardButton(
-                "remove", callback_data="button4")
-            markup.row(button3, button4)
-            button5 = telebot.types.InlineKeyboardButton(
-                "edit rules", callback_data="button5")
-            button6 = telebot.types.InlineKeyboardButton(
-                "more", callback_data="button6")
-            markup.row(button5, button6)
-            photo = "lions.png"
-            file = open("./" + photo, "rb")
-            bot.send_message(call.chat.id,
-                             f"Hello, {quser_name}!\n🦁: {l_balance}")
-            bot.send_photo(call.chat.id, file, reply_markup=markup)
-
         def call2handler(call):
             user_id = call.from_user.id
             conn, cursor = get_user_db(user_id)
@@ -625,10 +615,14 @@ while True:
             markup.row(button5, button6)
             photo = "lions.png"
             file = open("./" + photo, "rb")
-            # , reply_markup=markup)
-            bot.send_message(call.message.chat.id,
-                             f"Hello, {quser_name}!\n🦁: {l_balance}")
-            bot.send_photo(call.message.chat.id, file, reply_markup=markup)
+            try:
+                bot.send_message(call.message.chat.id,
+                                 f"Hello, {quser_name}!\n🦁: {l_balance}")
+                bot.send_photo(call.message.chat.id, file, reply_markup=markup)
+            except Exception:
+                bot.send_message(call.chat.id,
+                                 f"Hello, {quser_name}!\n🦁: {l_balance}")
+                bot.send_photo(call.chat.id, file, reply_markup=markup)
 
         # ----------------------------------------------- #
         #                   callback                      #
@@ -641,33 +635,7 @@ while True:
         def callback_handler(call):
             user_id = call.from_user.id
             if call.data == "button2":
-                conn, cursor = get_user_db(user_id)
-                cursor.execute(
-                    "SELECT quser_name, l_balance FROM userdata "
-                    "WHERE id = (SELECT MAX(id) FROM userdata)"
-                )
-                user_data = cursor.fetchone()
-                if user_data:
-                    quser_name, l_balance = user_data
-                    markup = telebot.types.InlineKeyboardMarkup()
-                    button3 = telebot.types.InlineKeyboardButton(
-                        "add", callback_data="button3")
-                    button4 = telebot.types.InlineKeyboardButton(
-                        "remove", callback_data="button4")
-                    markup.row(button3, button4)
-                    button5 = telebot.types.InlineKeyboardButton(
-                        "edit rules", callback_data="button5")
-                    button6 = telebot.types.InlineKeyboardButton(
-                        "more", callback_data="button6")
-                    markup.row(button5, button6)
-                    photo = "lions.png"
-                    file = open("./" + photo, "rb")
-                    # , reply_markup=markup)
-                    bot.send_message(call.message.chat.id,
-                                     f"Hello, {quser_name}!\n🦁: {l_balance}")
-                    bot.send_photo(call.message.chat.id,
-                                   file,
-                                   reply_markup=markup)
+                call2handler(call)
             elif call.data == "button5":
                 bot.send_message(user_id,
                                  "To get started, please tell me your name")
@@ -812,31 +780,7 @@ while True:
                 )
                 conn.commit()
                 conn.close()  # end!!!!
-                conn, cursor = get_user_db(user_id)
-                cursor.execute(
-                    "SELECT quser_name, l_balance FROM userdata WHERE id = "
-                    "(SELECT MAX(id) FROM userdata)"
-                )
-                user_data = cursor.fetchone()
-                if user_data:
-                    quser_name, l_balance = user_data
-                    markup = telebot.types.InlineKeyboardMarkup()
-                    button3 = telebot.types.InlineKeyboardButton(
-                        "add", callback_data="button3")
-                    button4 = telebot.types.InlineKeyboardButton(
-                        "remove", callback_data="button4")
-                    markup.row(button3, button4)
-                    button5 = telebot.types.InlineKeyboardButton(
-                        "edit rules", callback_data="button5")
-                    button6 = telebot.types.InlineKeyboardButton(
-                        "more", callback_data="button6")
-                    markup.row(button5, button6)
-                    photo = "lions.png"
-                    file = open("./" + photo, "rb")
-                    # , reply_markup=markup)
-                    bot.send_message(user_id,
-                                     f"Hello, {quser_name}!\n🦁: {l_balance}")
-                    bot.send_photo(user_id, file, reply_markup=markup)
+                call2handler(message)
             else:
                 bot.send_message(
                     user_id,
@@ -863,31 +807,7 @@ while True:
                 )
                 conn.commit()
                 conn.close()  # end!!!!
-                conn, cursor = get_user_db(user_id)
-                cursor.execute(
-                    "SELECT quser_name, l_balance FROM userdata WHERE id "
-                    "= (SELECT MAX(id) FROM userdata)"
-                )
-                user_data = cursor.fetchone()
-                if user_data:
-                    quser_name, l_balance = user_data
-                    markup = telebot.types.InlineKeyboardMarkup()
-                    button3 = telebot.types.InlineKeyboardButton(
-                        "add", callback_data="button3")
-                    button4 = telebot.types.InlineKeyboardButton(
-                        "remove", callback_data="button4")
-                    markup.row(button3, button4)
-                    button5 = telebot.types.InlineKeyboardButton(
-                        "edit rules", callback_data="button5")
-                    button6 = telebot.types.InlineKeyboardButton(
-                        "more", callback_data="button6")
-                    markup.row(button5, button6)
-                    photo = "lions.png"
-                    file = open("./" + photo, "rb")
-                    # , reply_markup=markup)
-                    bot.send_message(user_id,
-                                     f"Hello, {quser_name}!\n🦁: {l_balance}")
-                    bot.send_photo(user_id, file, reply_markup=markup)
+                call2handler(message)
             else:
                 bot.send_message(
                     user_id,
