@@ -11,6 +11,7 @@ import signal
 import sys
 import time
 import os
+# import uuid
 from telebot import types
 from dotenv import load_dotenv
 load_dotenv()
@@ -50,7 +51,8 @@ def timing(message):
 while True:
     try:
         # ----------------------------------------------- #
-        # MADE: fix terminal,
+        # MADE: share and input func
+
         # NEED: delete useless messages, add custom font, allow 2
         # users to work on the same database. make a real donation request,
         # design repeater, make suggest button in registration and editting
@@ -68,7 +70,7 @@ while True:
 
         def search_database(message):
             try:
-                db_filename = message.text
+                db_filename = message.text.strip().lower() + '.db'
                 conn = sqlite3.connect(db_filename)
                 cursor = conn.cursor()
                 cursor.execute(get_data)
@@ -1287,6 +1289,84 @@ while True:
                 f"2. {random.choice(rewards)}\n"
                 f"3. {random.choice(rewards)}",
             )
+
+        @bot.message_handler(commands=["share"])
+        def share(message):
+            user_id = message.from_user.id
+            photo = "lions_share.jpeg"
+            file = open("./" + photo, "rb")
+            bot.send_photo(user_id, file)
+            # terminal
+            user = message.from_user
+            user_id = user.id
+            response = (f"{user_id}")
+            bot.send_message(user_id, response)
+            # terminal
+            # myuuid = uuid.uuid4()
+            # print('Your UUID is: ' + str(myuuid))
+
+        @bot.message_handler(commands=["input"])
+        def input(message):
+            bot.send_message(
+                message.chat.id, "Please enter your code")
+            bot.register_next_step_handler(message, inputproccesing)
+
+        def inputproccesing(message):
+            try:
+                user_id = message.from_user.id
+                db_filename = message.text.strip().lower() + '.db'
+                conn = sqlite3.connect(db_filename)
+                cursor = conn.cursor()
+                cursor.execute(get_data)
+
+                user_data = cursor.fetchone()
+                conn.close()
+                if user_data:
+                    (
+                        quser_name,
+                        soulmate_name,
+                        user_task,
+                        user_2task,
+                        user_3task,
+                        task_cost,
+                        task_2cost,
+                        task_3cost,
+                        user_reward,
+                        reward_cost,
+                        user_2reward,
+                        reward_2cost,
+                        user_3reward,
+                        reward_3cost,
+                        l_balance,
+                    ) = user_data
+                    response = (
+                        f"💖{quser_name} and {soulmate_name}💖\n"
+                        f"Your tasks are:\n"
+                        f"1. {user_task} - for {task_cost} lions\n"
+                        f"2. {user_2task} - for {task_2cost} lions\n"
+                        f"3. {user_3task} - for {task_3cost} lions\n"
+                        f"Your rewards are:\n"
+                        f"1. {user_reward} - for {reward_cost} lions\n"
+                        f"2. {user_2reward} - for {reward_2cost} lions\n"
+                        f"3. {user_3reward} - for {reward_3cost} lions\n"
+                        f"Lions balance: {l_balance}")
+                else:
+                    response = "I don't have your data yet. "
+                    "Please provide your information."
+                bot.send_message(user_id, response)
+                markup = telebot.types.InlineKeyboardMarkup()
+                button1 = telebot.types.InlineKeyboardButton(
+                    "yes", callback_data="button1")
+                button2 = telebot.types.InlineKeyboardButton(
+                    "no", callback_data="button2")
+                markup.add(button1, button2)
+                bot.send_message(user_id, "Want to edit?", reply_markup=markup)
+            except Exception as e:
+                bot.send_message(
+                    message.chat.id,
+                    f"An error occurred "
+                    f"while searching the database: {str(e)}",
+                )
 
         bot.infinity_polling(timeout=10, long_polling_timeout=5)
 
