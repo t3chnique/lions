@@ -11,7 +11,6 @@ import signal
 import sys
 import time
 import os
-# import uuid
 from telebot import types
 from dotenv import load_dotenv
 load_dotenv()
@@ -19,9 +18,6 @@ token = os.getenv('TOKEN')
 me = os.getenv('ME')
 
 bot = telebot.TeleBot(token)
-# kill = bot.delete_message
-# 6673006333:AAFv9IxtTSnwiiyxSzDDhvJm2xoZSJObZPY - new
-# 16499881879:AAHslQDLXLNbNCM4zFhYMPEWiEHVibzgaA8 - old
 # ----------------------------------------------- #
 
 
@@ -41,17 +37,10 @@ get_data = "SELECT quser_name, soulmate_name, user_task, " \
            "FROM userdata WHERE id = (SELECT MAX(id) FROM userdata)"
 
 
-@bot.message_handler(commands=["timing"])
-def timing(message):
-    while True:
-        bot.send_message(me, "every hour message")
-        time.sleep(60 * 60)
-
-
 while True:
     try:
         # ----------------------------------------------- #
-        # MADE: share and input func
+        # MADE:
 
         # NEED: delete useless messages, add custom font, allow 2
         # users to work on the same database. make a real donation request,
@@ -201,51 +190,51 @@ while True:
             except Exception:
                 user_id = message.from_user.id
                 create_user_table(user_id)
-                bot.send_message(
-                    user_id,
-                    "Hi there! Here's how Love & Lions"
-                    "works:\nYou create tasks and rewards for your "
-                    "soulmate, assign them a lion value, and then "
-                    "they complete tasks to earn lions. These lions "
-                    "can be spent to claim the rewards you've set up. "
-                    "It's all about showing appreciation!\n"
-                    "The video tutorial can be found below 🤗",
-                )
-                video = "help.mp4"
-                file = open("./" + video, "rb")
-                # terminal
-                user = message.from_user
-                chat = message.chat
-                username = user.username
-                user_id = user.id
-                first_name = user.first_name
-                last_name = user.last_name
-                language_code = user.language_code
-                chat_id = chat.id
-                message_id = message.message_id
-                chat_type = chat.type
-                date_time = message.date
-                profile_photos = bot.get_user_profile_photos(user_id)
-                response = (f"Username: {username}\n"
-                            f"User ID: {user_id}\n"
-                            f"First Name: {first_name}\n"
-                            f"Last Name: {last_name}\n"
-                            f"Language Code: {language_code}\n"
-                            f"Chat ID: {chat_id}\n"
-                            f"Message ID: {message_id}\n"
-                            f"Chat Type: {chat_type}\n"
-                            f"Date and Time: {date_time}")
-                if profile_photos and profile_photos.photos:
-                    latest_photo = profile_photos.photos[-1][-1]
-                    file_id = latest_photo.file_id
-                    bot.send_photo(me, file_id, caption=response)
-                else:
-                    bot.send_message(me, response)
-                # terminal
-                bot.send_video(message.chat.id, file)
-                bot.send_message(user_id,
-                                 "To get started, please tell me your name")
-                bot.register_next_step_handler(message, ask_quser_name)
+                markup = telebot.types.InlineKeyboardMarkup()
+                button1 = telebot.types.InlineKeyboardButton(
+                    "next", callback_data="tut1")
+                markup.add(button1)
+                photo = "lions_share.jpeg"
+                file = open("./" + photo, "rb")
+                response = ('welcome, this is 1st message')
+                bot.send_photo(user_id, file, caption=response,
+                               reply_markup=markup)
+
+        def tutorial2(message):
+            user_id = message.from_user.id
+            markup = telebot.types.InlineKeyboardMarkup()
+            button1 = telebot.types.InlineKeyboardButton(
+                "next", callback_data="tut2")
+            markup.add(button1)
+            photo = "lions_share.jpeg"
+            file = open("./" + photo, "rb")
+            response = ('welcome, this is 2nd message')
+            bot.send_photo(user_id, file, caption=response,
+                           reply_markup=markup)
+
+        def tutorial3(message):
+            user_id = message.from_user.id
+            markup = telebot.types.InlineKeyboardMarkup()
+            button1 = telebot.types.InlineKeyboardButton(
+                "next", callback_data="tut3")
+            markup.add(button1)
+            photo = "lions_share.jpeg"
+            file = open("./" + photo, "rb")
+            response = ('welcome, this is 3rd message')
+            bot.send_photo(user_id, file, caption=response,
+                           reply_markup=markup)
+
+        def tutorial4(message):
+            user_id = message.from_user.id
+            markup = telebot.types.InlineKeyboardMarkup()
+            button1 = telebot.types.InlineKeyboardButton(
+                "next", callback_data="tut4")
+            markup.add(button1)
+            photo = "lions_share.jpeg"
+            file = open("./" + photo, "rb")
+            response = ('welcome, this is 4th message')
+            bot.send_photo(user_id, file, caption=response,
+                           reply_markup=markup)
 
         def ask_quser_name(message):
             user_id = message.from_user.id
@@ -762,6 +751,16 @@ while True:
                     "to offer in exchange for lions?",
                 )
                 bot.register_next_step_handler(call.message, edit_3reward)
+            elif call.data == "tut1":
+                tutorial2(call)
+            elif call.data == "tut2":
+                tutorial3(call)
+            elif call.data == "tut3":
+                tutorial4(call)
+            elif call.data == "tut4":
+                bot.send_message(user_id,
+                                 "To get started, please tell me your name")
+                bot.register_next_step_handler(call.message, ask_quser_name)
 
         def minuslions(message):
             user_id = message.from_user.id
@@ -1306,7 +1305,7 @@ while True:
             # print('Your UUID is: ' + str(myuuid))
 
         @bot.message_handler(commands=["input"])
-        def input(message):
+        def input_p(message):
             bot.send_message(
                 message.chat.id, "Please enter your code")
             bot.register_next_step_handler(message, inputproccesing)
