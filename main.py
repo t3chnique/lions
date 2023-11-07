@@ -196,7 +196,15 @@ while True:
                 markup.add(button1)
                 photo = "lions_share.jpeg"
                 file = open("./" + photo, "rb")
-                response = ('welcome, this is 1st message')
+                response = ('Relationships are all about creating '
+                            'beautiful memories. With this bot, you '
+                            'can turn everyday tasks into delightful '
+                            'adventures. Create tasks for your partner, '
+                            'assign lion values, and watch the fun begin. '
+                            'Imagine earning lions for tasks like "Wash '
+                            'and dry the dishes" or "Do the grocery '
+                            'shopping". The more lions you earn, the '
+                            'more rewards you can enjoy.')
                 bot.send_photo(user_id, file, caption=response,
                                reply_markup=markup)
 
@@ -208,7 +216,12 @@ while True:
             markup.add(button1)
             photo = "lions_share.jpeg"
             file = open("./" + photo, "rb")
-            response = ('welcome, this is 2nd message')
+            response = ('Keep the romance alive by surprising '
+                        'your partner with meaningful rewards. "A '
+                        'Romantic Date Night" or "Breakfast in Bed" '
+                        'are just a few ideas. With this bot, you '
+                        'can exchange tokens and experience these '
+                        'rewards together, making every day special.')
             bot.send_photo(user_id, file, caption=response,
                            reply_markup=markup)
 
@@ -220,7 +233,15 @@ while True:
             markup.add(button1)
             photo = "lions_share.jpeg"
             file = open("./" + photo, "rb")
-            response = ('welcome, this is 3rd message')
+            response = ('Registration and '
+                        'Basic Setup:\nAfter completing this tutorial, '
+                        'the app will ask you for your name and '
+                        'other information. You will set up tasks, '
+                        'rewards, and values to exchange with your '
+                        'partner.\n\nManaging Your Lions:\nOnce '
+                        'registered, you will receive a main '
+                        'message. In the main message, you can '
+                        'add or remove lions from your balance.')
             bot.send_photo(user_id, file, caption=response,
                            reply_markup=markup)
 
@@ -232,7 +253,30 @@ while True:
             markup.add(button1)
             photo = "lions_share.jpeg"
             file = open("./" + photo, "rb")
-            response = ('welcome, this is 4th message')
+            response = ('In the bottom left corner of the app, '
+                        'you will find a convenient menu that '
+                        'provides quick access to essential '
+                        'functions:\n\nProfile: View your profile, '
+                        'which includes a list of your tasks, '
+                        'rewards, their values, and your lion '
+                        'balance.\n\nSuggest: Get inspired by '
+                        'generating 3 random tasks and 3 random '
+                        'rewards when you are in need of fresh '
+                        'ideas.\n\nMain: Access the main message '
+                        'where you can effortlessly manage your '
+                        'lion balance. Add or remove lions with '
+                        'just a few taps.\n\nHelp: Need guidance? '
+                        'Revisit this tutorial to ensure you make '
+                        'the most of the app.\n\nShare: Share a'
+                        'unique code with your partner, allowing '
+                        'them to join you in using this bot. It is '
+                        'a great way to enjoy the app together.'
+                        '\n\nConnect: Connect with your partner by '
+                        'sending the code they provided via the '
+                        '"Share" function. This opens up the '
+                        'possibility to view and edit everything '
+                        'in the app together, further '
+                        'strengthening your connection.')
             bot.send_photo(user_id, file, caption=response,
                            reply_markup=markup)
 
