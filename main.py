@@ -37,6 +37,15 @@ get_data = "SELECT quser_name, soulmate_name, user_task, " \
            "FROM userdata WHERE id = (SELECT MAX(id) FROM userdata)"
 
 
+def delete_message_call(call):
+    for i in range(0, 50):
+        bot.delete_message(call.from_user.id, call.message.id - i)
+
+
+def delete_message_message(message):
+    for i in range(0, 50):
+        bot.delete_message(message.chat.id, message.id - i)
+
 while True:
     try:
         # ----------------------------------------------- #
@@ -582,6 +591,7 @@ while True:
                 "no", callback_data="button2")
             markup.add(button1, button2)
             bot.send_message(user_id, "Want to edit?", reply_markup=markup)
+            delete_message_call(call)
 
         @bot.message_handler(commands=["main"])
         def call2handler(call):
@@ -660,6 +670,7 @@ while True:
                 )
             elif call.data == "button7":
                 call2handler(call)
+                delete_message_call(call)
             elif call.data == "button8":
                 call2handler(call)
             elif call.data == "button9":
@@ -673,6 +684,7 @@ while True:
                     parse_mode="Markdown",
                     reply_markup=markup,
                 )
+                delete_message_call(call)
             elif call.data == "button10":  # same with 13
                 bot.send_message(
                     user_id,
@@ -788,6 +800,7 @@ while True:
                     "Error: User data not found. "
                     "Please make sure you have provided your information.",
                 )
+            delete_message_message(message)
 
         def pluslions(message):
             user_id = message.from_user.id
@@ -815,6 +828,7 @@ while True:
                     "Error: User data not found. "
                     "Please make sure you have provided your information.",
                 )
+            delete_message_message(message)
 
         # ----------------------------------------------- #
         #                   editinfo                      #
