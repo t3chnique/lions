@@ -11,6 +11,8 @@ import signal
 import sys
 import time
 import os
+# import subprocess
+import json
 from telebot import types
 from dotenv import load_dotenv
 load_dotenv()
@@ -19,6 +21,50 @@ me = os.getenv('ME')
 
 bot = telebot.TeleBot(token)
 # ----------------------------------------------- #
+
+user_language = {}
+# -----------------responce---------------------- #
+with open("response.json", "r", encoding="utf-8") as file:
+    response = json.load(file)
+
+re = response
+
+und = re["und"]
+tasks_res = re["tasks"]
+dlya = re["dlya"]
+lions = re["lions"]
+balance = re["balance"]
+rewards_res = re["rewards"]
+y = re["y"]
+n = re["n"]
+undr = re["undr"]
+tasks_resr = re["tasksr"]
+dlyar = re["dlyar"]
+lionsr = re["lionsr"]
+rewardsr = re["rewardsr"]
+balancer = re["balancer"]
+yr = ["yr"]
+# -----------------responce---------------------- #
+
+# -----------------strings_en---------------------- #
+with open("strings_en.json", "r", encoding="utf-8") as file:
+    strings_en = json.load(file)
+
+se = strings_en
+
+tuten1 = se["tut"]
+
+# -----------------strings_en---------------------- #
+
+# -----------------strings_ru---------------------- #
+with open("strings_ru.json", "r", encoding="utf-8") as file:
+    strings_ru = json.load(file)
+
+sr = strings_ru
+
+tuter1 = sr["tut"]
+
+# -----------------strings_ru---------------------- #
 
 
 def exit_gracefully(signal, frame):
@@ -30,11 +76,7 @@ def exit_gracefully(signal, frame):
 
 signal.signal(signal.SIGINT, exit_gracefully)
 
-get_data = "SELECT quser_name, soulmate_name, user_task, " \
-           "user_2task, user_3task, task_cost, task_2cost, " \
-           "task_3cost, user_reward, reward_cost, user_2reward, " \
-           "reward_2cost, user_3reward, reward_3cost, l_balance " \
-           "FROM userdata WHERE id = (SELECT MAX(id) FROM userdata)"
+get_data = strings_en["get_data"]
 
 
 while True:
@@ -42,11 +84,13 @@ while True:
         # ----------------------------------------------- #
         # MADE:
 
+        # fix terminal, make a protection of user_id
+
         # NEED: delete useless messages, add custom font, allow 2
         # users to work on the same database. make a real donation request,
         # design repeater, make suggest button in registration and editting
         # X-step tutorial with buttons
-        print("\n# ---------------------start-------------------------- #")
+        print("\n# ---------------------start main en---------------------- #")
         print("hello, this is a small addition to the bot")
         bot.send_message(me, "turning on...")
 
@@ -55,7 +99,14 @@ while True:
             bot.send_message(
                 message.chat.id, "Please enter the name "
                 "of the SQL database file.")
+            welcome_message = strings_en["welcome"]
+            bot.send_message(
+                message.chat.id, welcome_message)
             bot.register_next_step_handler(message, search_database)
+
+        # @bot.message_handler(commands=["diepls"])
+        # def diepls(message):
+            # os._exit(0)
 
         def search_database(message):
             try:
@@ -86,16 +137,16 @@ while True:
                     ) = user_data
 
                     response = (
-                        f"💖{quser_name} and {soulmate_name}💖\n"
-                        f"Your tasks are:\n"
-                        f"1. {user_task} - for {task_cost} lions\n"
-                        f"2. {user_2task} - for {task_2cost} lions\n"
-                        f"3. {user_3task} - for {task_3cost} lions\n"
-                        f"Your rewards are:\n"
-                        f"1. {user_reward} - for {reward_cost} lions\n"
-                        f"2. {user_2reward} - for {reward_2cost} lions\n"
-                        f"3. {user_3reward} - for {reward_3cost} lions\n"
-                        f"Lions balance: {l_balance}")
+                        f"💖{quser_name} {und} {soulmate_name}💖\n"
+                        f"{tasks_res}:\n"
+                        f"1. {user_task} - {dlya} {task_cost} {lions}\n"
+                        f"2. {user_2task} - {dlya} {task_2cost} {lions}\n"
+                        f"3. {user_3task} - {dlya} {task_3cost} {lions}\n"
+                        f"{rewards_res}:\n"
+                        f"1. {user_reward} - {dlya} {reward_cost} {lions}\n"
+                        f"2. {user_2reward} - {dlya} {reward_2cost} {lions}\n"
+                        f"3. {user_3reward} - {dlya} {reward_3cost} {lions}\n"
+                        f"{balance}: {l_balance}")
                 else:
                     response = "I don't have your data yet. "
                     "Please provide your information."
@@ -123,11 +174,23 @@ while True:
                             user_reward TEXT, user_2reward TEXT,
                             user_3reward TEXT, reward_cost INTEGER,
                             reward_2cost INTEGER, reward_3cost INTEGER,
-                            l_balance INTEGER DEFAULT 0)""")
+                            l_balance INTEGER DEFAULT 0, lang TEXT)""")
             conn.commit()
             conn.close()
 
         @bot.message_handler(commands=["start"])
+        def language(message):
+            user_id = message.from_user.id
+            markup = telebot.types.InlineKeyboardMarkup()
+            button1 = telebot.types.InlineKeyboardButton(
+                "english", callback_data="en")
+            button2 = telebot.types.InlineKeyboardButton(
+                "russian", callback_data="ru")
+            markup.add(button1, button2)
+            bot.send_message(user_id, "hi, choose you language first",
+                             reply_markup=markup)
+
+        # @bot.message_handler(commands=["start"])
         def greet_user(message):
             try:
                 user_id = message.from_user.id
@@ -161,18 +224,43 @@ while True:
                         reward_3cost,
                         l_balance,
                     ) = user_data
-
-                    response = (
-                        f"💖{quser_name} and {soulmate_name}💖\n"
-                        f"Your tasks are:\n"
-                        f"1. {user_task} - for {task_cost} lions\n"
-                        f"2. {user_2task} - for {task_2cost} lions\n"
-                        f"3. {user_3task} - for {task_3cost} lions\n"
-                        f"Your rewards are:\n"
-                        f"1. {user_reward} - for {reward_cost} lions\n"
-                        f"2. {user_2reward} - for {reward_2cost} lions\n"
-                        f"3. {user_3reward} - for {reward_3cost} lions\n"
-                        f"Lions balance: {l_balance}")
+                    if user_id in user_language:
+                        language = user_language[user_id]
+                    else:
+                        language = "en"
+                        user_language[user_id] = language
+                    if language.lower() == "en":
+                        response = (
+                            f"💖{quser_name} {und} {soulmate_name}💖\n"
+                            f"{tasks_res}:\n"
+                            f"1. {user_task} - {dlya} {task_cost} {lions}\n"
+                            f"2. {user_2task} - {dlya} {task_2cost} {lions}\n"
+                            f"3. {user_3task} - {dlya} {task_3cost} {lions}\n"
+                            f"{rewards_res}:\n"
+                            f"1. {user_reward} - {dlya} "
+                            f"{reward_cost} {lions}\n"
+                            f"2. {user_2reward} - {dlya} "
+                            f"{reward_2cost} {lions}\n"
+                            f"3. {user_3reward} - {dlya} "
+                            f"{reward_3cost} {lions}\n"
+                            f"{balance}: {l_balance}")
+                    else:
+                        response = (
+                            f"💖{quser_name} {undr} {soulmate_name}💖\n"
+                            f"{tasks_resr}:\n"
+                            f"1. {user_task} - {dlyar} {task_cost} {lionsr}\n"
+                            f"2. {user_2task} - {dlyar} "
+                            f"{task_2cost} {lionsr}\n"
+                            f"3. {user_3task} - {dlyar} "
+                            f"{task_3cost} {lionsr}\n"
+                            f"{rewards_res}:\n"
+                            f"1. {user_reward} - {dlyar} "
+                            f"{reward_cost} {lionsr}\n"
+                            f"2. {user_2reward} - {dlyar} "
+                            f"{reward_2cost} {lionsr}\n"
+                            f"3. {user_3reward} - {dlyar} "
+                            f"{reward_3cost} {lionsr}\n"
+                            f"{balancer}: {l_balance}")
                 else:
                     response = "I don't have your data yet. "
                     "Please provide your information."
@@ -182,9 +270,9 @@ while True:
                 bot.send_message(user_id, response)
                 markup = telebot.types.InlineKeyboardMarkup()
                 button1 = telebot.types.InlineKeyboardButton(
-                    "yes", callback_data="button1")
+                    f"{y}", callback_data="button1")
                 button2 = telebot.types.InlineKeyboardButton(
-                    "no", callback_data="button2")
+                    f"{n}", callback_data="button2")
                 markup.add(button1, button2)
                 bot.send_message(user_id, "want to edit?", reply_markup=markup)
             except Exception:
@@ -196,15 +284,15 @@ while True:
                 markup.add(button1)
                 photo = "lions_share.jpeg"
                 file = open("./" + photo, "rb")
-                response = ('Relationships are all about creating '
-                            'beautiful memories. With this bot, you '
-                            'can turn everyday tasks into delightful '
-                            'adventures. Create tasks for your partner, '
-                            'assign lion values, and watch the fun begin. '
-                            'Imagine earning lions for tasks like "Wash '
-                            'and dry the dishes" or "Do the grocery '
-                            'shopping". The more lions you earn, the '
-                            'more rewards you can enjoy.')
+                if user_id in user_language:
+                    language = user_language[user_id]
+                else:
+                    language = "en"
+                    user_language[user_id] = language
+                if language.lower() == "en":
+                    response = tuten1
+                else:
+                    response = tuter1
                 bot.send_photo(user_id, file, caption=response,
                                reply_markup=markup)
 
@@ -216,12 +304,15 @@ while True:
             markup.add(button1)
             photo = "lions_share.jpeg"
             file = open("./" + photo, "rb")
-            response = ('Keep the romance alive by surprising '
-                        'your partner with meaningful rewards. "A '
-                        'Romantic Date Night" or "Breakfast in Bed" '
-                        'are just a few ideas. With this bot, you '
-                        'can exchange tokens and experience these '
-                        'rewards together, making every day special.')
+            if user_id in user_language:
+                language = user_language[user_id]
+            else:
+                language = "en"
+                user_language[user_id] = language
+            if language.lower() == "en":
+                response = se["tut1"]
+            else:
+                response = sr["tut1"]
             bot.send_photo(user_id, file, caption=response,
                            reply_markup=markup)
 
@@ -233,15 +324,15 @@ while True:
             markup.add(button1)
             photo = "lions_share.jpeg"
             file = open("./" + photo, "rb")
-            response = ('Registration and '
-                        'Basic Setup:\nAfter completing this tutorial, '
-                        'the app will ask you for your name and '
-                        'other information. You will set up tasks, '
-                        'rewards, and values to exchange with your '
-                        'partner.\n\nManaging Your Lions:\nOnce '
-                        'registered, you will receive a main '
-                        'message. In the main message, you can '
-                        'add or remove lions from your balance.')
+            if user_id in user_language:
+                language = user_language[user_id]
+            else:
+                language = "en"
+                user_language[user_id] = language
+            if language.lower() == "en":
+                response = se["tut2"]
+            else:
+                response = sr["tut2"]
             bot.send_photo(user_id, file, caption=response,
                            reply_markup=markup)
 
@@ -253,30 +344,15 @@ while True:
             markup.add(button1)
             photo = "lions_share.jpeg"
             file = open("./" + photo, "rb")
-            response = ('In the bottom left corner of the app, '
-                        'you will find a convenient menu that '
-                        'provides quick access to essential '
-                        'functions:\n\nProfile: View your profile, '
-                        'which includes a list of your tasks, '
-                        'rewards, their values, and your lion '
-                        'balance.\n\nSuggest: Get inspired by '
-                        'generating 3 random tasks and 3 random '
-                        'rewards when you are in need of fresh '
-                        'ideas.\n\nMain: Access the main message '
-                        'where you can effortlessly manage your '
-                        'lion balance. Add or remove lions with '
-                        'just a few taps.\n\nHelp: Need guidance? '
-                        'Revisit this tutorial to ensure you make '
-                        'the most of the app.\n\nShare: Share a'
-                        'unique code with your partner, allowing '
-                        'them to join you in using this bot. It is '
-                        'a great way to enjoy the app together.'
-                        '\n\nConnect: Connect with your partner by '
-                        'sending the code they provided via the '
-                        '"Share" function. This opens up the '
-                        'possibility to view and edit everything '
-                        'in the app together, further '
-                        'strengthening your connection.')
+            if user_id in user_language:
+                language = user_language[user_id]
+            else:
+                language = "en"
+                user_language[user_id] = language
+            if language.lower() == "en":
+                response = se["tut3"]
+            else:
+                response = sr["tut3"]
             bot.send_photo(user_id, file, caption=response,
                            reply_markup=markup)
 
@@ -290,9 +366,17 @@ while True:
             )
             conn.commit()
             conn.close()
-
+            if user_id in user_language:
+                language = user_language[user_id]
+            else:
+                language = "en"
+                user_language[user_id] = language
+            if language.lower() == "en":
+                response = se["s_name"]
+            else:
+                response = sr["s_name"]
             bot.send_message(
-                user_id, "Great! Now, I'd like to know your soulmate's name")
+                user_id, response)
             bot.register_next_step_handler(message, ask_soulmate_name)
 
         # Function to record the user's soulmate_name in the database
@@ -309,11 +393,17 @@ while True:
             conn.commit()
             conn.close()
 
+            if user_id in user_language:
+                language = user_language[user_id]
+            else:
+                language = "en"
+                user_language[user_id] = language
+            if language.lower() == "en":
+                response = se["1_task"]
+            else:
+                response = sr["1_task"]
             bot.send_message(
-                user_id,
-                "Thank you! What's the first task you'd like to "
-                "create for your soulmate?",
-            )
+                user_id, response)
             bot.register_next_step_handler(message, ask_user_task)
 
         # ----------------------------------------------- #
@@ -331,11 +421,17 @@ while True:
             conn.commit()
             conn.close()
             # cost
+            if user_id in user_language:
+                language = user_language[user_id]
+            else:
+                language = "en"
+                user_language[user_id] = language
+            if language.lower() == "en":
+                response = se["1_cost"]
+            else:
+                response = sr["1_cost"]
             bot.send_message(
-                user_id,
-                "Wonderful! How many lions should your soulmate "
-                "earn for completing the first task?",
-            )
+                user_id, response)
             bot.register_next_step_handler(message, ask_task_cost)
 
         def ask_task_cost(message):
@@ -358,11 +454,17 @@ while True:
             button2 = telebot.types.InlineKeyboardButton(
                 "yes", callback_data="button11")
             markup.add(button1, button2)
+            if user_id in user_language:
+                language = user_language[user_id]
+            else:
+                language = "en"
+                user_language[user_id] = language
+            if language.lower() == "en":
+                response = se["2_task"]
+            else:
+                response = sr["2_task"]
             bot.send_message(
-                user_id,
-                "Would you like to add a second task for your soulmate?",
-                reply_markup=markup,
-            )
+                user_id, response, reply_markup=markup)
 
         def ask_user_2task(message):
             user_id = message.from_user.id
@@ -377,11 +479,17 @@ while True:
             conn.commit()
             conn.close()
             # cost
+            if user_id in user_language:
+                language = user_language[user_id]
+            else:
+                language = "en"
+                user_language[user_id] = language
+            if language.lower() == "en":
+                response = se["2_cost"]
+            else:
+                response = sr["2_cost"]
             bot.send_message(
-                user_id,
-                "Excellent choice! How many lions should your "
-                "soulmate earn for completing the second task?",
-            )
+                user_id, response)
             bot.register_next_step_handler(message, ask_2task_cost)
 
         def ask_2task_cost(message):
@@ -401,11 +509,17 @@ while True:
             button2 = telebot.types.InlineKeyboardButton(
                 "yes", callback_data="button12")
             markup.add(button1, button2)
+            if user_id in user_language:
+                language = user_language[user_id]
+            else:
+                language = "en"
+                user_language[user_id] = language
+            if language.lower() == "en":
+                response = se["3_task"]
+            else:
+                response = sr["3_task"]
             bot.send_message(
-                message.chat.id,
-                "Would you like to add a third task for your soulmate?",
-                reply_markup=markup,
-            )
+                user_id, response, reply_markup=markup)
 
         def ask_user_3task(message):
             user_id = message.from_user.id
@@ -420,11 +534,17 @@ while True:
             conn.commit()
             conn.close()
             # cost
+            if user_id in user_language:
+                language = user_language[user_id]
+            else:
+                language = "en"
+                user_language[user_id] = language
+            if language.lower() == "en":
+                response = se["3_cost"]
+            else:
+                response = sr["3_cost"]
             bot.send_message(
-                user_id,
-                "Perfect! How many lions should your soulmate earn "
-                "for completing the third task?",
-            )
+                user_id, response)
             bot.register_next_step_handler(message, ask_3task_cost)
 
         def ask_3task_cost(message):
@@ -439,11 +559,17 @@ while True:
             conn.commit()
             conn.close()
 
+            if user_id in user_language:
+                language = user_language[user_id]
+            else:
+                language = "en"
+                user_language[user_id] = language
+            if language.lower() == "en":
+                response = se["1_reward"]
+            else:
+                response = sr["1_reward"]
             bot.send_message(
-                user_id,
-                "Now, let's talk about the rewards. What's the "
-                "first reward you'd like to offer in exchange for lions?",
-            )
+                user_id, response)
             bot.register_next_step_handler(message, ask_reward)
 
         # ----------------------------------------------- #
@@ -461,11 +587,17 @@ while True:
             conn.commit()
             conn.close()
 
+            if user_id in user_language:
+                language = user_language[user_id]
+            else:
+                language = "en"
+                user_language[user_id] = language
+            if language.lower() == "en":
+                response = se["1_rcost"]
+            else:
+                response = sr["1_rcost"]
             bot.send_message(
-                user_id,
-                "Terrific! How many lions should your soulmate "
-                "spend to claim the first reward?",
-            )
+                user_id, response)
             bot.register_next_step_handler(message, ask_reward_cost)
 
         def ask_reward_cost(message):
@@ -487,11 +619,17 @@ while True:
             button2 = telebot.types.InlineKeyboardButton(
                 "yes", callback_data="button14")
             markup.add(button1, button2)
+            if user_id in user_language:
+                language = user_language[user_id]
+            else:
+                language = "en"
+                user_language[user_id] = language
+            if language.lower() == "en":
+                response = se["2_reward"]
+            else:
+                response = sr["2_reward"]
             bot.send_message(
-                message.chat.id,
-                "Would you like to add a second reward for your soulmate?",
-                reply_markup=markup,
-            )
+                user_id, response, reply_markup=markup)
 
         def ask_2reward(message):
             user_id = message.from_user.id
@@ -506,11 +644,17 @@ while True:
             conn.commit()
             conn.close()
 
+            if user_id in user_language:
+                language = user_language[user_id]
+            else:
+                language = "en"
+                user_language[user_id] = language
+            if language.lower() == "en":
+                response = se["2_rcost"]
+            else:
+                response = sr["2_rcost"]
             bot.send_message(
-                user_id,
-                "Great! How many lions should your soulmate spend "
-                "to claim the second reward?",
-            )
+                user_id, response)
             bot.register_next_step_handler(message, ask_2reward_cost)
 
         def ask_2reward_cost(message):
@@ -532,11 +676,17 @@ while True:
             button2 = telebot.types.InlineKeyboardButton(
                 "yes", callback_data="button17")
             markup.add(button1, button2)
+            if user_id in user_language:
+                language = user_language[user_id]
+            else:
+                language = "en"
+                user_language[user_id] = language
+            if language.lower() == "en":
+                response = se["3_reward"]
+            else:
+                response = sr["3_reward"]
             bot.send_message(
-                message.chat.id,
-                "Would you like to add a third reward for your soulmate?",
-                reply_markup=markup,
-            )
+                user_id, response, reply_markup=markup)
 
         def ask_3reward(message):
             user_id = message.from_user.id
@@ -551,11 +701,17 @@ while True:
             conn.commit()
             conn.close()
 
+            if user_id in user_language:
+                language = user_language[user_id]
+            else:
+                language = "en"
+                user_language[user_id] = language
+            if language.lower() == "en":
+                response = se["3_rcost"]
+            else:
+                response = sr["3_rcost"]
             bot.send_message(
-                user_id,
-                "Awesome! How many lions should your soulmate spend "
-                "to claim the third reward?",
-            )
+                user_id, response)
             bot.register_next_step_handler(message, ask_3reward_cost)
 
         def ask_3reward_cost(message):
@@ -571,11 +727,17 @@ while True:
             conn.commit()
             conn.close()
 
+            if user_id in user_language:
+                language = user_language[user_id]
+            else:
+                language = "en"
+                user_language[user_id] = language
+            if language.lower() == "en":
+                response = se["thanks"]
+            else:
+                response = sr["thanks"]
             bot.send_message(
-                user_id,
-                "Thanks for sharing your information! "
-                "Here's what I know about you:",
-            )
+                user_id, response)
             send_user_data(message)
 
         def send_user_data(call):
@@ -585,34 +747,61 @@ while True:
             user_data = cursor.fetchone()
             conn.close()
             if user_data:
-                (
-                    quser_name,
-                    soulmate_name,
-                    user_task,
-                    user_2task,
-                    user_3task,
-                    task_cost,
-                    task_2cost,
-                    task_3cost,
-                    user_reward,
-                    reward_cost,
-                    user_2reward,
-                    reward_2cost,
-                    user_3reward,
-                    reward_3cost,
-                    l_balance,
-                ) = user_data
-                response = (
-                        f"💖{quser_name} and {soulmate_name}💖\n"
-                        f"Your tasks are:\n"
-                        f"1. {user_task} - for {task_cost} lions\n"
-                        f"2. {user_2task} - for {task_2cost} lions\n"
-                        f"3. {user_3task} - for {task_3cost} lions\n"
-                        f"Your rewards are:\n"
-                        f"1. {user_reward} - for {reward_cost} lions\n"
-                        f"2. {user_2reward} - for {reward_2cost} lions\n"
-                        f"3. {user_3reward} - for {reward_3cost} lions\n"
-                        f"Lions balance: {l_balance}")
+                if user_data:
+                    (
+                        quser_name,
+                        soulmate_name,
+                        user_task,
+                        user_2task,
+                        user_3task,
+                        task_cost,
+                        task_2cost,
+                        task_3cost,
+                        user_reward,
+                        reward_cost,
+                        user_2reward,
+                        reward_2cost,
+                        user_3reward,
+                        reward_3cost,
+                        l_balance,
+                    ) = user_data
+                    if user_id in user_language:
+                        language = user_language[user_id]
+                    else:
+                        language = "en"
+                        user_language[user_id] = language
+                    if language.lower() == "en":
+                        response = (
+                            f"💖{quser_name} {und} {soulmate_name}💖\n"
+                            f"{tasks_res}:\n"
+                            f"1. {user_task} - {dlya} {task_cost} {lions}\n"
+                            f"2. {user_2task} - {dlya} {task_2cost} {lions}\n"
+                            f"3. {user_3task} - {dlya} {task_3cost} {lions}\n"
+                            f"{rewards_res}:\n"
+                            f"1. {user_reward} - {dlya} "
+                            f"{reward_cost} {lions}\n"
+                            f"2. {user_2reward} - {dlya} "
+                            f"{reward_2cost} {lions}\n"
+                            f"3. {user_3reward} - {dlya} "
+                            f"{reward_3cost} {lions}\n"
+                            f"{balance}: {l_balance}")
+                    else:
+                        response = (
+                            f"💖{quser_name} {undr} {soulmate_name}💖\n"
+                            f"{tasks_resr}:\n"
+                            f"1. {user_task} - {dlyar} {task_cost} {lionsr}\n"
+                            f"2. {user_2task} - {dlyar} "
+                            f"{task_2cost} {lionsr}\n"
+                            f"3. {user_3task} - {dlyar} "
+                            f"{task_3cost} {lionsr}\n"
+                            f"{rewards_res}:\n"
+                            f"1. {user_reward} - {dlyar} "
+                            f"{reward_cost} {lionsr}\n"
+                            f"2. {user_2reward} - {dlyar} "
+                            f"{reward_2cost} {lionsr}\n"
+                            f"3. {user_3reward} - {dlyar} "
+                            f"{reward_3cost} {lionsr}\n"
+                            f"{balancer}: {l_balance}")
             else:
                 response = (
                     "I don't have your data yet. "
@@ -621,9 +810,9 @@ while True:
             bot.send_message(user_id, response)
             markup = telebot.types.InlineKeyboardMarkup()
             button1 = telebot.types.InlineKeyboardButton(
-                "yes", callback_data="button1")
+                f"{y}", callback_data="button1")
             button2 = telebot.types.InlineKeyboardButton(
-                "no", callback_data="button2")
+                f"{n}", callback_data="button2")
             markup.add(button1, button2)
             bot.send_message(user_id, "Want to edit?", reply_markup=markup)
 
@@ -637,27 +826,57 @@ while True:
             )
             user_data = cursor.fetchone()
             quser_name, l_balance = user_data
-            markup = telebot.types.InlineKeyboardMarkup()
-            button3 = telebot.types.InlineKeyboardButton(
-                "add", callback_data="button3")
-            button4 = telebot.types.InlineKeyboardButton(
-                "remove", callback_data="button4")
-            markup.row(button3, button4)
-            button5 = telebot.types.InlineKeyboardButton(
-                "edit rules", callback_data="button5")
-            button6 = telebot.types.InlineKeyboardButton(
-                "more", callback_data="button6")
-            markup.row(button5, button6)
-            photo = "lions.png"
-            file = open("./" + photo, "rb")
-            try:
-                bot.send_message(call.message.chat.id,
-                                 f"Hello, {quser_name}!\n🦁: {l_balance}")
-                bot.send_photo(call.message.chat.id, file, reply_markup=markup)
-            except Exception:
-                bot.send_message(call.chat.id,
-                                 f"Hello, {quser_name}!\n🦁: {l_balance}")
-                bot.send_photo(call.chat.id, file, reply_markup=markup)
+            if user_id in user_language:
+                language = user_language[user_id]
+            else:
+                language = "en"
+                user_language[user_id] = language
+            if language.lower() == "en":
+                markup = telebot.types.InlineKeyboardMarkup()
+                button3 = telebot.types.InlineKeyboardButton(
+                    "add", callback_data="button3")
+                button4 = telebot.types.InlineKeyboardButton(
+                    "remove", callback_data="button4")
+                markup.row(button3, button4)
+                button5 = telebot.types.InlineKeyboardButton(
+                    "edit rules", callback_data="button5")
+                button6 = telebot.types.InlineKeyboardButton(
+                    "more", callback_data="button6")
+                markup.row(button5, button6)
+                photo = "lions.png"
+                file = open("./" + photo, "rb")
+                try:
+                    bot.send_message(call.message.chat.id,
+                                     f"Hello, {quser_name}!\n🦁: {l_balance}")
+                    bot.send_photo(call.message.chat.id, file,
+                                   reply_markup=markup)
+                except Exception:
+                    bot.send_message(call.chat.id,
+                                     f"Hello, {quser_name}!\n🦁: {l_balance}")
+                    bot.send_photo(call.chat.id, file, reply_markup=markup)
+            else:
+                markup = telebot.types.InlineKeyboardMarkup()
+                button3 = telebot.types.InlineKeyboardButton(
+                    "прибавить 🦁", callback_data="button3")
+                button4 = telebot.types.InlineKeyboardButton(
+                    "вычесть 🦁", callback_data="button4")
+                markup.row(button3, button4)
+                button5 = telebot.types.InlineKeyboardButton(
+                    "изменить правила", callback_data="button1")
+                button6 = telebot.types.InlineKeyboardButton(
+                    "другое", callback_data="button6")
+                markup.row(button5, button6)
+                photo = "lions.png"
+                file = open("./" + photo, "rb")
+                try:
+                    bot.send_message(call.message.chat.id,
+                                     f"Привет, {quser_name}!\n🦁: {l_balance}")
+                    bot.send_photo(call.message.chat.id, file,
+                                   reply_markup=markup)
+                except Exception:
+                    bot.send_message(call.chat.id,
+                                     f"Привет, {quser_name}!\n🦁: {l_balance}")
+                    bot.send_photo(call.chat.id, file, reply_markup=markup)
 
         # ----------------------------------------------- #
         #                   callback                      #
@@ -672,12 +891,28 @@ while True:
             if call.data == "button2":
                 call2handler(call)
             elif call.data == "button5":
-                bot.send_message(user_id,
-                                 "To get started, please tell me your name")
+                if user_id in user_language:
+                    language = user_language[user_id]
+                else:
+                    language = "en"
+                    user_language[user_id] = language
+                if language.lower() == "en":
+                    response = se["name"]
+                else:
+                    response = sr["name"]
+                bot.send_message(user_id, response)
                 bot.register_next_step_handler(call.message, edit_quser_name)
             elif call.data == "button1":
-                bot.send_message(user_id,
-                                 "To get started, please tell me your name")
+                if user_id in user_language:
+                    language = user_language[user_id]
+                else:
+                    language = "en"
+                    user_language[user_id] = language
+                if language.lower() == "en":
+                    response = se["name"]
+                else:
+                    response = sr["name"]
+                bot.send_message(user_id, response)
                 bot.register_next_step_handler(call.message, edit_quser_name)
             elif call.data == "button3":
                 bot.send_message(call.message.chat.id, "How much?")  # plus
@@ -718,82 +953,147 @@ while True:
                     reply_markup=markup,
                 )
             elif call.data == "button10":  # same with 13
+                if user_id in user_language:
+                    language = user_language[user_id]
+                else:
+                    language = "en"
+                    user_language[user_id] = language
+                if language.lower() == "en":
+                    response = se["1_reward"]
+                else:
+                    response = sr["1_reward"]
                 bot.send_message(
-                    user_id,
-                    "Now, let's talk about the rewards. "
-                    "What's the first reward you'd like to offer "
-                    "in exchange for lions?",
-                )
+                    user_id, response)
                 bot.register_next_step_handler(call.message, ask_reward)
             elif call.data == "button11":
+                if user_id in user_language:
+                    language = user_language[user_id]
+                else:
+                    language = "en"
+                    user_language[user_id] = language
+                if language.lower() == "en":
+                    response = se["e2_task"]
+                else:
+                    response = sr["e2_task"]
                 bot.send_message(
-                    user_id,
-                    "Fantastic! What's the second task you'd like to "
-                    "create for your soulmate?",
-                )
+                    user_id, response)
                 bot.register_next_step_handler(call.message, ask_user_2task)
             elif call.data == "button12":
+                if user_id in user_language:
+                    language = user_language[user_id]
+                else:
+                    language = "en"
+                    user_language[user_id] = language
+                if language.lower() == "en":
+                    response = se["e3_task"]
+                else:
+                    response = sr["e3_task"]
                 bot.send_message(
-                    user_id,
-                    "Got it! What's the third task you'd like to "
-                    "create for your soulmate?",
-                )
+                    user_id, response)
                 bot.register_next_step_handler(call.message, ask_user_3task)
             elif call.data == "button14":
+                if user_id in user_language:
+                    language = user_language[user_id]
+                else:
+                    language = "en"
+                    user_language[user_id] = language
+                if language.lower() == "en":
+                    response = se["e2_reward"]
+                else:
+                    response = sr["e2_reward"]
                 bot.send_message(
-                    user_id,
-                    "Wonderful choice! What's the second reward you'd like to "
-                    "offer in exchange for lions?",
-                )
+                    user_id, response)
                 bot.register_next_step_handler(call.message, ask_2reward)
             elif call.data == "button15":
+                if user_id in user_language:
+                    language = user_language[user_id]
+                else:
+                    language = "en"
+                    user_language[user_id] = language
+                if language.lower() == "en":
+                    response = se["thanks"]
+                else:
+                    response = sr["thanks"]
                 bot.send_message(
-                    user_id,
-                    "Thanks for sharing your information! Here's what I know "
-                    "about you:",
-                )
+                    user_id, response)
                 send_user_data(call)
             elif call.data == "button17":
+                if user_id in user_language:
+                    language = user_language[user_id]
+                else:
+                    language = "en"
+                    user_language[user_id] = language
+                if language.lower() == "en":
+                    response = se["e3_reward"]
+                else:
+                    response = sr["e3_reward"]
                 bot.send_message(
-                    user_id,
-                    "Last but not least, what's the third reward you'd like "
-                    "to offer in exchange for lions?",
-                )
+                    user_id, response)
                 bot.register_next_step_handler(call.message, ask_3reward)
             elif call.data == "button18":
+                if user_id in user_language:
+                    language = user_language[user_id]
+                else:
+                    language = "en"
+                    user_language[user_id] = language
+                if language.lower() == "en":
+                    response = se["1_reward"]
+                else:
+                    response = sr["1_reward"]
                 bot.send_message(
-                    user_id,
-                    "Now, let's talk about the rewards. What's the first "
-                    "reward you'd like to offer in exchange for lions?",
-                )
+                    user_id, response)
                 bot.register_next_step_handler(call.message, edit_reward)
             elif call.data == "button19":
+                if user_id in user_language:
+                    language = user_language[user_id]
+                else:
+                    language = "en"
+                    user_language[user_id] = language
+                if language.lower() == "en":
+                    response = se["e2_task"]
+                else:
+                    response = sr["e2_task"]
                 bot.send_message(
-                    user_id,
-                    "Fantastic! What's the second task you'd like to "
-                    "create for your soulmate?",
-                )
+                    user_id, response)
                 bot.register_next_step_handler(call.message, edit_user_2task)
             elif call.data == "button20":
+                if user_id in user_language:
+                    language = user_language[user_id]
+                else:
+                    language = "en"
+                    user_language[user_id] = language
+                if language.lower() == "en":
+                    response = se["e3_task"]
+                else:
+                    response = sr["e3_task"]
                 bot.send_message(
-                    user_id,
-                    "Got it! What's the third task you'd like to "
-                    "create for your soulmate?",
-                )
+                    user_id, response)
                 bot.register_next_step_handler(call.message, edit_user_3task)
             elif call.data == "button13":
+                if user_id in user_language:
+                    language = user_language[user_id]
+                else:
+                    language = "en"
+                    user_language[user_id] = language
+                if language.lower() == "en":
+                    response = se["e2_reward"]
+                else:
+                    response = sr["e2_reward"]
                 bot.send_message(
-                    user_id,
-                    "Wonderful choice! What's the second reward you'd like "
-                    "to offer in exchange for lions?",
-                )
+                    user_id, response)
                 bot.register_next_step_handler(call.message, ask_2reward)
             elif call.data == "button16":
+                if user_id in user_language:
+                    language = user_language[user_id]
+                else:
+                    language = "en"
+                    user_language[user_id] = language
+                if language.lower() == "en":
+                    response = se["e3_reward"]
+                else:
+                    response = sr["e3_reward"]
                 bot.send_message(
-                    user_id,
-                    "Last but not least, what's the third reward you'd like "
-                    "to offer in exchange for lions?",
-                )
+                    user_id, response)
                 bot.register_next_step_handler(call.message, edit_3reward)
             elif call.data == "tut1":
                 tutorial2(call)
@@ -802,9 +1102,25 @@ while True:
             elif call.data == "tut3":
                 tutorial4(call)
             elif call.data == "tut4":
-                bot.send_message(user_id,
-                                 "To get started, please tell me your name")
+                if user_id in user_language:
+                    language = user_language[user_id]
+                else:
+                    language = "en"
+                    user_language[user_id] = language
+                if language.lower() == "en":
+                    response = se["name"]
+                else:
+                    response = sr["name"]
+                bot.send_message(user_id, response)
                 bot.register_next_step_handler(call.message, ask_quser_name)
+            elif call.data == "en":
+                user_language[user_id] = 'en'
+                bot.send_message(user_id, "Language set to English.")
+                greet_user(call)
+            elif call.data == "ru":
+                user_language[user_id] = 'ru'
+                bot.send_message(user_id, "Язык установлен на русский.")
+                greet_user(call)
 
         def minuslions(message):
             user_id = message.from_user.id
@@ -1202,34 +1518,36 @@ while True:
             user_data = cursor.fetchone()
             conn.close()
             if user_data:
-                (
-                    quser_name,
-                    soulmate_name,
-                    user_task,
-                    user_2task,
-                    user_3task,
-                    task_cost,
-                    task_2cost,
-                    task_3cost,
-                    user_reward,
-                    reward_cost,
-                    user_2reward,
-                    reward_2cost,
-                    user_3reward,
-                    reward_3cost,
-                    l_balance,
-                ) = user_data
-                response = (
-                        f"💖{quser_name} and {soulmate_name}💖\n"
-                        f"Your tasks are:\n"
-                        f"1. {user_task} - for {task_cost} lions\n"
-                        f"2. {user_2task} - for {task_2cost} lions\n"
-                        f"3. {user_3task} - for {task_3cost} lions\n"
-                        f"Your rewards are:\n"
-                        f"1. {user_reward} - for {reward_cost} lions\n"
-                        f"2. {user_2reward} - for {reward_2cost} lions\n"
-                        f"3. {user_3reward} - for {reward_3cost} lions\n"
-                        f"Lions balance: {l_balance}")
+                if user_data:
+                    (
+                        quser_name,
+                        soulmate_name,
+                        user_task,
+                        user_2task,
+                        user_3task,
+                        task_cost,
+                        task_2cost,
+                        task_3cost,
+                        user_reward,
+                        reward_cost,
+                        user_2reward,
+                        reward_2cost,
+                        user_3reward,
+                        reward_3cost,
+                        l_balance,
+                    ) = user_data
+
+                    response = (
+                        f"💖{quser_name} {und} {soulmate_name}💖\n"
+                        f"{tasks_res}:\n"
+                        f"1. {user_task} - {dlya} {task_cost} {lions}\n"
+                        f"2. {user_2task} - {dlya} {task_2cost} {lions}\n"
+                        f"3. {user_3task} - {dlya} {task_3cost} {lions}\n"
+                        f"{rewards_res}:\n"
+                        f"1. {user_reward} - {dlya} {reward_cost} {lions}\n"
+                        f"2. {user_2reward} - {dlya} {reward_2cost} {lions}\n"
+                        f"3. {user_3reward} - {dlya} {reward_3cost} {lions}\n"
+                        f"{balance}: {l_balance}")
             else:
                 response = (
                     "I don't have your data yet. "
@@ -1241,9 +1559,9 @@ while True:
             bot.send_message(user_id, response)
             markup = telebot.types.InlineKeyboardMarkup()
             button1 = telebot.types.InlineKeyboardButton(
-                "yes", callback_data="button1")
+                f"{y}", callback_data="button1")
             button2 = telebot.types.InlineKeyboardButton(
-                "no", callback_data="button2")
+                f"{n}", callback_data="button2")
             markup.add(button1, button2)
             bot.send_message(user_id, "want to edit?", reply_markup=markup)
 
@@ -1382,26 +1700,27 @@ while True:
                         reward_3cost,
                         l_balance,
                     ) = user_data
+
                     response = (
-                        f"💖{quser_name} and {soulmate_name}💖\n"
-                        f"Your tasks are:\n"
-                        f"1. {user_task} - for {task_cost} lions\n"
-                        f"2. {user_2task} - for {task_2cost} lions\n"
-                        f"3. {user_3task} - for {task_3cost} lions\n"
-                        f"Your rewards are:\n"
-                        f"1. {user_reward} - for {reward_cost} lions\n"
-                        f"2. {user_2reward} - for {reward_2cost} lions\n"
-                        f"3. {user_3reward} - for {reward_3cost} lions\n"
-                        f"Lions balance: {l_balance}")
+                        f"💖{quser_name} {und} {soulmate_name}💖\n"
+                        f"{tasks_res}:\n"
+                        f"1. {user_task} - {dlya} {task_cost} {lions}\n"
+                        f"2. {user_2task} - {dlya} {task_2cost} {lions}\n"
+                        f"3. {user_3task} - {dlya} {task_3cost} {lions}\n"
+                        f"{rewards_res}:\n"
+                        f"1. {user_reward} - {dlya} {reward_cost} {lions}\n"
+                        f"2. {user_2reward} - {dlya} {reward_2cost} {lions}\n"
+                        f"3. {user_3reward} - {dlya} {reward_3cost} {lions}\n"
+                        f"{balance}: {l_balance}")
                 else:
                     response = "I don't have your data yet. "
                     "Please provide your information."
                 bot.send_message(user_id, response)
                 markup = telebot.types.InlineKeyboardMarkup()
                 button1 = telebot.types.InlineKeyboardButton(
-                    "yes", callback_data="button1")
+                    f"{y}", callback_data="button1")
                 button2 = telebot.types.InlineKeyboardButton(
-                    "no", callback_data="button2")
+                    f"{n}", callback_data="button2")
                 markup.add(button1, button2)
                 bot.send_message(user_id, "Want to edit?", reply_markup=markup)
             except Exception as e:
@@ -1412,6 +1731,8 @@ while True:
                 )
 
         bot.infinity_polling(timeout=10, long_polling_timeout=5)
+        # if __name__ == "__main__":
+        # bot.polling(none_stop=True)
 
     # ----------------------------------------------- #
     except Exception as e:
