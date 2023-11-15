@@ -178,6 +178,15 @@ while True:
             conn.commit()
             conn.close()
 
+        def delete_message_call(call):
+            for i in range(0, 50):
+                bot.delete_message(call.message.chat.id,
+                                   call.message.message_id-i)
+
+        def delete_message_message(message):
+            for i in range(0, 50):
+                bot.delete_message(message.chat.id, message.message_id-i)
+
         @bot.message_handler(commands=["start"])
         def language(message):
             user_id = message.from_user.id
@@ -815,6 +824,7 @@ while True:
                 f"{n}", callback_data="button2")
             markup.add(button1, button2)
             bot.send_message(user_id, "Want to edit?", reply_markup=markup)
+            delete_message_call(call)
 
         @bot.message_handler(commands=["main"])
         def call2handler(call):
@@ -937,6 +947,7 @@ while True:
                     parse_mode="Markdown",
                     reply_markup=markup,
                 )
+                delete_message_call(call)
             elif call.data == "button7":
                 call2handler(call)
             elif call.data == "button8":
@@ -952,6 +963,7 @@ while True:
                     parse_mode="Markdown",
                     reply_markup=markup,
                 )
+                delete_message_call(call)
             elif call.data == "button10":  # same with 13
                 if user_id in user_language:
                     language = user_language[user_id]
@@ -1142,6 +1154,7 @@ while True:
                 conn.commit()
                 conn.close()  # end!!!!
                 call2handler(message)
+                delete_message_message(message)
             else:
                 bot.send_message(
                     user_id,
@@ -1169,6 +1182,7 @@ while True:
                 conn.commit()
                 conn.close()  # end!!!!
                 call2handler(message)
+                delete_message_message(message)
             else:
                 bot.send_message(
                     user_id,
