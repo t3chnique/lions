@@ -1,5 +1,5 @@
 # ----------------------------------------------- #
-# Project Name          : lions       			  #
+# Project Name          : lions       		  #
 # Author Name           : Lev Babushkin           #
 # File Name             : main.py                 #
 # Contact in telegram   : @levaau                 #
@@ -11,7 +11,6 @@ import signal
 import sys
 import time
 import os
-# import subprocess
 import json
 from telebot import types
 from dotenv import load_dotenv
@@ -186,6 +185,13 @@ while True:
         def delete_message_message(message):
             for i in range(0, 50):
                 bot.delete_message(message.chat.id, message.message_id-i)
+
+        def t1_delete_call(call):
+            for i in range(0, 3):
+                bot.delete_message(call.message.chat.id,
+                                   call.message.message_id-i)
+
+        # delete_message_call(call)
 
         @bot.message_handler(commands=["start"])
         def language(message):
@@ -900,6 +906,7 @@ while True:
             user_id = call.from_user.id
             if call.data == "button2":
                 call2handler(call)
+                delete_message_call(call)
             elif call.data == "button5":
                 if user_id in user_language:
                     language = user_language[user_id]
@@ -952,6 +959,7 @@ while True:
                 call2handler(call)
             elif call.data == "button8":
                 call2handler(call)
+                delete_message_call(call)
             elif call.data == "button9":
                 markup = types.InlineKeyboardMarkup()
                 return_button = types.InlineKeyboardButton(
@@ -1109,6 +1117,7 @@ while True:
                 bot.register_next_step_handler(call.message, edit_3reward)
             elif call.data == "tut1":
                 tutorial2(call)
+                t1_delete_call(call)
             elif call.data == "tut2":
                 tutorial3(call)
             elif call.data == "tut3":
@@ -1503,19 +1512,70 @@ while True:
         @bot.message_handler(commands=["help"])
         def help(message):
             user_id = message.from_user.id
-            bot.send_message(
-                user_id,
-                "Hi there! Here's how Love & Lions works:\n"
-                "You create tasks and rewards for your soulmate, "
-                "assign them a lion value, and then they complete "
-                "tasks to earn lions. These lions can be spent to "
-                "claim the rewards you've set up. It's all about "
-                "showing appreciation!\nThe video tutorial can be "
-                "found below 🤗",
-            )
-            video = "help.mp4"
-            file = open("./" + video, "rb")
-            bot.send_video(message.chat.id, file)
+            photo = "lions_share.jpeg"
+            file = open("./" + photo, "rb")
+            if user_id in user_language:
+                language = user_language[user_id]
+            else:
+                language = "en"
+                user_language[user_id] = language
+            if language.lower() == "en":
+                response = tuten1
+            else:
+                response = tuter1
+            bot.send_photo(user_id, file, caption=response)
+            help2(message)
+
+        def help2(message):
+            user_id = message.from_user.id
+            photo = "lions_share.jpeg"
+            file = open("./" + photo, "rb")
+            if user_id in user_language:
+                language = user_language[user_id]
+            else:
+                language = "en"
+                user_language[user_id] = language
+            if language.lower() == "en":
+                response = se["tut1"]
+            else:
+                response = sr["tut1"]
+            bot.send_photo(user_id, file, caption=response)
+            help3(message)
+
+        def help3(message):
+            user_id = message.from_user.id
+            photo = "lions_share.jpeg"
+            file = open("./" + photo, "rb")
+            if user_id in user_language:
+                language = user_language[user_id]
+            else:
+                language = "en"
+                user_language[user_id] = language
+            if language.lower() == "en":
+                response = se["tut2"]
+            else:
+                response = sr["tut2"]
+            bot.send_photo(user_id, file, caption=response)
+            help4(message)
+
+        def help4(message):
+            user_id = message.from_user.id
+            photo = "lions_share.jpeg"
+            file = open("./" + photo, "rb")
+            if user_id in user_language:
+                language = user_language[user_id]
+            else:
+                language = "en"
+                user_language[user_id] = language
+            if language.lower() == "en":
+                response = se["tut3"]
+            else:
+                response = sr["tut3"]
+            bot.send_photo(user_id, file, caption=response)
+            help5(message)
+
+        def help5(message):
+            user_id = message.from_user.id
             markup = telebot.types.InlineKeyboardMarkup()
             button1 = telebot.types.InlineKeyboardButton(
                 "yes", callback_data="button9")
@@ -1586,74 +1646,137 @@ while True:
         #                                                 #
         # ----------------------------------------------- #
 
-        tasks = [
-            "Cook a special dinner for your partner.",
-            "Write a love letter.",
-            "Learn a new dance or song.",
-            "Bake cookies or cupcakes.",
-            "Plant flowers in the garden.",
-            "Plan a special birthday surprise.",
-            "Plan a surprise date night.",
-            "Organize a romantic picnic.",
-            "Take care of all the household chores for a day.",
-            "Give your partner a foot massage.",
-            "Watch your partner's favorite movie.",
-            "Write a list of things you love about your partner.",
-            "Create a scrapbook of your favorite memories.",
-            "Plan a game night at home.",
-            "Have a technology-free day.",
-            "Plan a spa day at home.",
-            "Wash and dry the dishes.",
-            "Clean the entire house.",
-            "Vacuum all the rooms.",
-            "Do the grocery shopping.",
-            "Take care of the laundry.",
-            "Shovel snow from the driveway.",
-            "Walk and groom the family pet.",
-            "Clean the windows and mirrors.",
-            "Set up or fix a computer.",
-            "Take out the trash.",
-            "Get the kids from school.",
-            "Organize the closet.",
-        ]
-
-        rewards = [
-            "Plan a visit to an art gallery.",
-            "Try a new restaurant.",
-            "Breakfast in bed.",
-            "Control of the TV remote for a day.",
-            "Have a fun tea party with stuffed animals.",
-            "Read a bedtime story with character voices.",
-            "Go on a bike ride in the park.",
-            "Draw and color together.",
-            "Have a movie night with your favorite films.",
-            "Have a picnic in the backyard.",
-            "Take a nature walk and collect leaves or rocks.",
-            "Play a board game or card game.",
-            "Have a painting or art session.",
-            "Watch the sunset or sunrise together.",
-            "Build a science experiment.",
-            "Explore a museum or science center.",
-            "Have a karaoke night at home.",
-            "Make a time capsule together.",
-            "Have a spa day with homemade facials.",
-            "Attend a local community event.",
-            "Go horseback riding together.",
-            "Have a day at the beach.",
-            "Take a day trip to a nearby town.",
-            "Plan a day of your partners choice.",
-            "A surprise gift",
-            "A long, warm hug.",
-            "A day of compliments.",
-            "A surprise adventure.",
-            "A day to try something new.",
-        ]
-
         @bot.message_handler(commands=["suggest"])
         def suggest(message):
             user_id = message.from_user.id
-            # random_task = random.choice(tasks)
-            # random_reward = random.choice(rewards)
+            if user_id in user_language:
+                language = user_language[user_id]
+            else:
+                language = "en"
+                user_language[user_id] = language
+            if language.lower() == "en":
+                tasks = [
+                    "Cook a special dinner for your partner.",
+                    "Write a love letter.",
+                    "Learn a new dance or song.",
+                    "Bake cookies or cupcakes.",
+                    "Plant flowers in the garden.",
+                    "Plan a special birthday surprise.",
+                    "Plan a surprise date night.",
+                    "Organize a romantic picnic.",
+                    "Take care of all the household chores for a day.",
+                    "Give your partner a foot massage.",
+                    "Watch your partner's favorite movie.",
+                    "Write a list of things you love about your partner.",
+                    "Create a scrapbook of your favorite memories.",
+                    "Plan a game night at home.",
+                    "Have a technology-free day.",
+                    "Plan a spa day at home.",
+                    "Wash and dry the dishes.",
+                    "Clean the entire house.",
+                    "Vacuum all the rooms.",
+                    "Do the grocery shopping.",
+                    "Take care of the laundry.",
+                    "Shovel snow from the driveway.",
+                    "Walk and groom the family pet.",
+                    "Clean the windows and mirrors.",
+                    "Set up or fix a computer.",
+                    "Take out the trash.",
+                    "Get the kids from school.",
+                    "Organize the closet.",
+                ]
+
+                rewards = [
+                    "Plan a visit to an art gallery.",
+                    "Try a new restaurant.",
+                    "Breakfast in bed.",
+                    "Control of the TV remote for a day.",
+                    "Have a fun tea party with stuffed animals.",
+                    "Read a bedtime story with character voices.",
+                    "Go on a bike ride in the park.",
+                    "Draw and color together.",
+                    "Have a movie night with your favorite films.",
+                    "Have a picnic in the backyard.",
+                    "Take a nature walk and collect leaves or rocks.",
+                    "Play a board game or card game.",
+                    "Have a painting or art session.",
+                    "Watch the sunset or sunrise together.",
+                    "Build a science experiment.",
+                    "Explore a museum or science center.",
+                    "Have a karaoke night at home.",
+                    "Make a time capsule together.",
+                    "Have a spa day with homemade facials.",
+                    "Attend a local community event.",
+                    "Go horseback riding together.",
+                    "Have a day at the beach.",
+                    "Take a day trip to a nearby town.",
+                    "Plan a day of your partners choice.",
+                    "A surprise gift",
+                    "A long, warm hug.",
+                    "A day of compliments.",
+                    "A surprise adventure.",
+                    "A day to try something new.",
+                ]
+            else:
+                tasks = [
+                    "Приготовьте специальный ужин для вашего партнера.",
+                    "Напишите любовное письмо.",
+                    "Испечь печенье или кексы.",
+                    "Посадите цветы в саду.",
+                    "Запланируйте неожиданное свидание.",
+                    "Организуйте романтический пикник.",
+                    "Занимайтесь всеми домашними делами в течение дня.",
+                    "Сделайте массаж стоп вашему партнеру.",
+                    "Напишите список вещей, которые вам нравятся"
+                    "в вашем партнере.",
+                    "Создайте альбом ваших любимых воспоминаний.",
+                    "Проведите день без гаджетов.",
+                    "Вымойте посуду.",
+                    "Уберите весь дом.",
+                    "Пропылесосьте все комнаты.",
+                    "Сходите за продуктами.",
+                    "Позаботьтесь о стирке.",
+                    "Уберите снег.",
+                    "Выгуляйте и ухаживайте за домашним питомцем.",
+                    "Умойте окна и зеркала.",
+                    "Настройте или почините компьютер.",
+                    "Вынесите мусор.",
+                    "Заберите детей из школы.",
+                    "Разберите вещи в шкафу.",
+                    "Завтрак в постели.",
+                ]
+
+                rewards = [
+                    "Запланируйте посещение художественной галереи.",
+                    "Попробуйте новый ресторан.",
+                    "Контроль над пультом ТВ на целый день.",
+                    "Устроить веселое чаепитие с плюшевыми игрушками.",
+                    "Прочитайте сказку перед сном с голосами персонажей.",
+                    "Прокатитесь на велосипеде в парке.",
+                    "Рисуйте и раскрашивайте вместе.",
+                    "Устройте киноночь с любимыми фильмами.",
+                    "Устроить пикник во дворе.",
+                    "Прогуляйтесь на природе и соберите листья или камни.",
+                    "Сыграйте в настольную или карточную игру.",
+                    "Устроить сессию рисования или искусства.",
+                    "Наблюдайте за закатом или восходом солнца вместе.",
+                    "Постройте научный эксперимент.",
+                    "Посетите музей или научный центр.",
+                    "Устроить караоке-вечер дома.",
+                    "Создайте вместе временную капсулу.",
+                    "Проведите спа-день с домашними масками.",
+                    "Посетите местное общественное событие.",
+                    "Прокатитесь верхом на лошади вместе.",
+                    "Проведите день на пляже.",
+                    "Сделайте короткую поездку в ближайший город.",
+                    "Запланируйте день на выбор вашего партнера.",
+                    "Сюрприз-подарок.",
+                    "Долгие, теплые объятия.",
+                    "День комплиментов.",
+                    "Неожиданное приключение.",
+                    "День, чтобы попробовать что-то новое.",
+                ]
+
             bot.send_message(
                 user_id,
                 f"Tasks:\n"
@@ -1746,7 +1869,7 @@ while True:
 
         bot.infinity_polling(timeout=10, long_polling_timeout=5)
         # if __name__ == "__main__":
-        # bot.polling(none_stop=True)
+        bot.polling(none_stop=True)
 
     # ----------------------------------------------- #
     except Exception as e:
